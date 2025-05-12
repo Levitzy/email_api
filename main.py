@@ -1014,8 +1014,3 @@ async def update_api_config(new_config_payload: UpdateConfigRequest) -> ConfigRe
 
     save_config(current_config)
     return ConfigResponse(**current_config)
-
-
-# To run this API:
-# uvicorn main:app --reload
-# (Assuming you save this file as main.py)
