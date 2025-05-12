@@ -3,23 +3,19 @@ from __future__ import annotations
 import json
 import logging
 import os
-import platform  # Not strictly needed for API, but was in original
 import random
 import string
-import sys  # Not strictly needed for API, but was in original
-import time  # Not strictly needed for API, but was in original
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union, Coroutine
 
 import requests
 from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr, Field
-import asyncio  # For asyncio.to_thread
+import asyncio
 
-# --- Logging Configuration ---
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -27,14 +23,11 @@ logging.basicConfig(
 )
 LOGGER = logging.getLogger("temp-mail-api")
 
-
-# --- Configuration and History File Paths ---
 CONFIG_DIR = Path.home() / ".config" / "tempmail-api"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 HISTORY_FILE = CONFIG_DIR / "history.json"
 
 
-# --- Configuration Management ---
 def ensure_config_dir() -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -69,7 +62,6 @@ def save_config(config: Dict[str, Any]) -> None:
         LOGGER.error(f"Failed to save config: {e}")
 
 
-# --- History Management ---
 def save_message_to_history(
     provider: str, address: str, message_data: Dict[str, Any]
 ) -> None:
@@ -106,7 +98,6 @@ def save_message_to_history(
         LOGGER.warning(f"Failed to save message to history: {e}")
 
 
-# --- Utility Functions ---
 def _rand_string(n: int = 10) -> str:
     return "".join(
         random.choice(string.ascii_lowercase + string.digits) for _ in range(n)
@@ -158,14 +149,12 @@ def _format_timestamp_iso(timestamp_str: Optional[str]) -> Optional[str]:
         return timestamp_str
 
 
-# --- HTTP Session ---
 def make_requests_session(timeout: int = 15) -> requests.Session:
     session = requests.Session()
     session.headers.update({"User-Agent": "TempMailAPI/1.0 (FastAPI)"})
     return session
 
 
-# --- Custom Exceptions ---
 class ProviderError(HTTPException):
     def __init__(self, status_code: int, detail: str):
         super().__init__(status_code=status_code, detail=detail)
@@ -186,13 +175,8 @@ class APIError(ProviderError):
         super().__init__(status_code=502, detail=detail)
 
 
-# --- Global State for Active Email Sessions ---
 active_api_sessions: Dict[str, Dict[str, Any]] = {}
 
-
-# --- Provider Specific Logic (Refactored for API) ---
-
-# GuerrillaMail
 GM_API_URL = "https://api.guerrillamail.com/ajax.php"
 GM_USER_AGENT = "Mozilla/5.0 (TempMailAPI/1.0)"
 
@@ -267,7 +251,6 @@ async def fetch_guerrillamail_messages(
                 "raw": email_content,
             }
             new_messages.append(formatted_message)
-            # seen_ids.add(mail_id) # This will be done in the calling endpoint logic
 
     except requests.RequestException as e:
         LOGGER.warning(f"GuerrillaMail: Network error during polling: {e}")
@@ -276,7 +259,6 @@ async def fetch_guerrillamail_messages(
     return new_messages
 
 
-# Mail.tm and Mail.gw
 async def _setup_mail_tm_gw_like(
     base_url: str, provider_name: str
 ) -> Tuple[str, str, Dict[str, Any]]:
@@ -360,7 +342,6 @@ async def _fetch_mail_tm_gw_like_messages(
                     )
 
                 provider_data["auth_token"] = new_auth_token
-                # Update in global state if this function is called directly by endpoint that has access
                 if (
                     "api_session_id" in provider_data
                     and provider_data["api_session_id"] in active_api_sessions
@@ -436,7 +417,6 @@ async def fetch_mail_gw_messages(
     return await _fetch_mail_tm_gw_like_messages(provider_data, seen_ids, "mail.gw")
 
 
-# Tempmail.lol
 TEMPMAIL_LOL_BASE_URL = "https://api.tempmail.lol"
 
 
@@ -498,7 +478,6 @@ async def fetch_tempmail_lol_messages(
     return new_messages
 
 
-# Dropmail.me
 DROPMAIL_ME_BASE_URL = "https://dropmail.me/api/graphql"
 
 
@@ -587,9 +566,7 @@ async def fetch_dropmail_me_messages(
     try:
         expires_at_str = provider_data.get("expires_at")
         if expires_at_str:
-            expires_dt = datetime.fromisoformat(
-                expires_at_str.replace("Z", "+00:00")
-            )  # Ensure timezone aware
+            expires_dt = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
             if datetime.now(timezone.utc) > expires_dt:
                 LOGGER.warning(
                     f"dropmail.me: Session {dropmail_session_id} has expired."
@@ -639,7 +616,6 @@ async def fetch_dropmail_me_messages(
     return new_messages
 
 
-# --- Provider Registry ---
 PROVIDER_SETUP_FUNCTIONS: Dict[
     str, Callable[..., Coroutine[Any, Any, Tuple[str, str, Dict[str, Any]]]]
 ] = {
@@ -660,7 +636,6 @@ PROVIDER_FETCH_FUNCTIONS: Dict[
     "dropmail.me": fetch_dropmail_me_messages,
 }
 
-# --- FastAPI Application ---
 app = FastAPI(
     title="Temp Mail API",
     description="API for generating temporary email addresses and checking their inboxes.",
@@ -668,7 +643,6 @@ app = FastAPI(
 )
 
 
-# --- Pydantic Models for API ---
 class Message(BaseModel):
     id: str
     from_address: Optional[EmailStr] = Field(None, alias="from")
@@ -717,9 +691,6 @@ class UpdateConfigRequest(BaseModel):
     save_messages: Optional[bool] = None
 
 
-# --- API Endpoints ---
-
-
 @app.get(
     "/providers", summary="List available email providers", response_model=List[str]
 )
@@ -753,8 +724,9 @@ async def create_email_session(
 
     try:
         if provider_name == "tempmail.lol":
-            # Type ignore because setup_tempmail_lol has 'rush' but others don't, handled by conditional call
-            api_session_id, email_address, provider_specific_data = await setup_func(rush=rush_mode)  # type: ignore
+            api_session_id, email_address, provider_specific_data = await setup_func(
+                rush=rush_mode
+            )
         else:
             api_session_id, email_address, provider_specific_data = await setup_func()
     except (NetworkError, APIError) as e:
@@ -784,8 +756,135 @@ async def create_email_session(
 
     return EmailSessionResponse(
         api_session_id=api_session_id,
-        email_address=email_address,  # type: ignore # Pydantic will validate
+        email_address=email_address,
         provider=provider_name,
+        created_at=created_at_dt.isoformat(),
+        expires_at=expires_at,
+    )
+
+
+@app.api_route(
+    "/gen",
+    methods=["GET", "POST"],
+    response_model=EmailSessionResponse,
+    status_code=201,
+    summary="Generate a new temporary email (supports random/default provider)",
+    description=(
+        "Creates a new temporary email session. "
+        "Supports selection of a specific provider, a random provider, or uses the configured default. "
+        "Parameters are accepted as query parameters for both GET and POST methods."
+    ),
+)
+async def generate_email_address(
+    provider: Optional[str] = Query(
+        None,
+        alias="provider_name",
+        description=(
+            "Specify the email provider name (e.g., 'mail.tm'), "
+            f"'random' for a random selection, or omit to use the default provider from config "
+            f"(or random if default is not set/valid). Available: {', '.join(PROVIDER_SETUP_FUNCTIONS.keys())}."
+        ),
+    ),
+    rush_mode: bool = Query(
+        False,
+        description="For tempmail.lol provider: Use rush mode for potentially faster address generation.",
+    ),
+) -> EmailSessionResponse:
+    """
+    Generates a new temporary email address.
+    - If 'provider_name' is specified and valid, that provider is used.
+    - If 'provider_name' is 'random', a random provider is chosen.
+    - If 'provider_name' is omitted:
+        1. Tries to use the 'default_provider' from the API configuration.
+        2. If the default is not set or invalid, a random provider is chosen.
+    - Supports 'rush_mode' for providers like 'tempmail.lol'.
+    - Accessible via GET or POST.
+    """
+    provider_to_use: str
+    available_providers = list(PROVIDER_SETUP_FUNCTIONS.keys())
+    config = load_config()
+
+    if not available_providers:
+        LOGGER.error(
+            "CRITICAL: No email providers configured in PROVIDER_SETUP_FUNCTIONS."
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error: No email providers available.",
+        )
+
+    if provider and provider.lower() == "random":
+        provider_to_use = random.choice(available_providers)
+        LOGGER.info(f"Random provider selected for /gen: {provider_to_use}")
+    elif provider and provider in PROVIDER_SETUP_FUNCTIONS:
+        provider_to_use = provider
+        LOGGER.info(f"Specific provider selected for /gen: {provider_to_use}")
+    elif not provider:
+        default_from_config = config.get("default_provider")
+        if default_from_config and default_from_config in available_providers:
+            provider_to_use = default_from_config
+            LOGGER.info(
+                f"Using default provider from config for /gen: {provider_to_use}"
+            )
+        else:
+            if default_from_config:
+                LOGGER.warning(
+                    f"Configured default provider '{default_from_config}' is invalid or not available. "
+                    "Choosing a random provider for /gen."
+                )
+            else:
+                LOGGER.info(
+                    "No provider specified and no valid default in config. Choosing a random provider for /gen."
+                )
+            provider_to_use = random.choice(available_providers)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Provider '{provider}' not supported. "
+                f"Available options: {', '.join(available_providers)}, 'random', or omit for default/random."
+            ),
+        )
+
+    setup_func = PROVIDER_SETUP_FUNCTIONS[provider_to_use]
+
+    try:
+        if provider_to_use == "tempmail.lol":
+            api_session_id, email_address, provider_specific_data = await setup_func(
+                rush=rush_mode
+            )
+        else:
+            api_session_id, email_address, provider_specific_data = await setup_func()
+    except (NetworkError, APIError) as e:
+        raise e
+    except Exception as e:
+        LOGGER.error(
+            f"Unexpected error creating session for {provider_to_use} via /gen: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create email session with {provider_to_use}: {str(e)}",
+        )
+
+    created_at_dt = datetime.now(timezone.utc)
+    session_data = {
+        "api_session_id": api_session_id,
+        "provider_name": provider_to_use,
+        "email_address": email_address,
+        "provider_specific_data": provider_specific_data,
+        "seen_message_ids": set(),
+        "created_at": created_at_dt,
+        "last_accessed_at": created_at_dt,
+    }
+    active_api_sessions[api_session_id] = session_data
+
+    expires_at = provider_specific_data.get("expires_at")
+
+    return EmailSessionResponse(
+        api_session_id=api_session_id,
+        email_address=email_address,
+        provider=provider_to_use,
         created_at=created_at_dt.isoformat(),
         expires_at=expires_at,
     )
@@ -806,11 +905,8 @@ async def get_new_messages(api_session_id: str) -> List[Message]:
     provider_name = session_data["provider_name"]
     fetch_func = PROVIDER_FETCH_FUNCTIONS[provider_name]
     provider_specific_data = session_data["provider_specific_data"]
-    provider_specific_data["api_session_id"] = (
-        api_session_id  # For potential re-auth updates
-    )
+    provider_specific_data["api_session_id"] = api_session_id
 
-    # Crucially, pass the set of seen message IDs for this session
     seen_ids_for_this_session = session_data["seen_message_ids"]
 
     try:
@@ -833,14 +929,7 @@ async def get_new_messages(api_session_id: str) -> List[Message]:
     save_enabled = config.get("save_messages", True)
 
     for raw_msg in raw_messages:
-        msg_id = str(raw_msg.get("id", _rand_string()))  # Ensure ID is string
-
-        # Add new message ID to the session's seen set *after* processing it
-        # This ensures if saving fails, we don't mark it as seen.
-        # The fetch_func itself should ideally only return new messages,
-        # but this is an additional safety if it doesn't perfectly filter.
-        # However, the current design is that fetch_func uses the passed seen_ids to filter.
-        # So, raw_messages should *only* contain new messages. We add their IDs to seen_ids_for_this_session here.
+        msg_id = str(raw_msg.get("id", _rand_string()))
 
         msg_model = Message(
             id=msg_id,
@@ -853,7 +942,7 @@ async def get_new_messages(api_session_id: str) -> List[Message]:
             raw=raw_msg.get("raw", raw_msg),
         )
         processed_messages.append(msg_model)
-        seen_ids_for_this_session.add(msg_id)  # Add to set for this session
+        seen_ids_for_this_session.add(msg_id)
 
         if save_enabled:
             history_message_data = {
@@ -880,7 +969,6 @@ async def get_new_messages(api_session_id: str) -> List[Message]:
 async def delete_email_session(api_session_id: str):
     if api_session_id in active_api_sessions:
         del active_api_sessions[api_session_id]
-        # No explicit return for 204
         return
     raise HTTPException(status_code=404, detail="API session not found.")
 
@@ -926,7 +1014,7 @@ async def view_message_history(
             )
             hist_entry = HistoryEntry(
                 provider=entry.get("provider", "unknown"),
-                address=entry.get("address", "unknown@example.com"),  # type: ignore
+                address=entry.get("address", "unknown@example.com"),
                 timestamp=entry.get("timestamp", datetime.min.isoformat()),
                 message=adapted_message,
             )
@@ -953,7 +1041,7 @@ async def export_history_to_file(
         with open(HISTORY_FILE, "r") as f_in:
             history_content = json.load(f_in)
 
-        ensure_config_dir()  # Ensure CONFIG_DIR exists
+        ensure_config_dir()
         export_path = CONFIG_DIR / output_filename
         with open(export_path, "w") as f_out:
             json.dump(history_content, f_out, indent=2)
