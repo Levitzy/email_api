@@ -226,7 +226,7 @@
         const rushModeContainer = document.getElementById('rushModeContainer');
         const rushModeToggle = document.getElementById('rushModeToggle');
 
-        const API_BASE_URL = ''; // This will be the root of your FastAPI app
+        const API_BASE_URL = ''; 
         let currentSessionId = null;
         let currentEmailAddress = null;
         let currentProviderName = null;
@@ -249,7 +249,6 @@
             }
             if (loadingEl) loadingEl.classList.remove('hidden');
 
-            // Construct the full URL using API_BASE_URL
             const url = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin);
             if (params) {
                 Object.keys(params).forEach(key => {
@@ -269,8 +268,6 @@
                 if (response.status === 204) { 
                     return { success: true, status: 204, data: null };
                 }
-                // Try to parse JSON, but if it fails and response is ok, still return success.
-                // If response is not ok, try to parse JSON for error details.
                 let responseData;
                 try {
                     responseData = await response.json();
@@ -379,7 +376,7 @@
                 clientSideMessages.sort((a, b) => {
                     const dateA = a.date ? new Date(a.date).getTime() : 0;
                     const dateB = b.date ? new Date(b.date).getTime() : 0;
-                    return dateB - dateA; // Sort descending by date
+                    return dateB - dateA; 
                 });
                 clientSideMessages.forEach(msg => renderMessageDOM(msg));
             }
@@ -391,7 +388,6 @@
                 try {
                     const sessionData = JSON.parse(savedSession);
                     if (sessionData.sessionId && sessionData.emailAddress && sessionData.provider) {
-                        // Check for expiration if expiresAt is present
                         if (sessionData.expiresAt && new Date(sessionData.expiresAt) < new Date()) {
                             console.log("Session expired, clearing from localStorage.");
                             clearSessionFromLocalStorage(); 
@@ -401,25 +397,23 @@
                         currentSessionId = sessionData.sessionId;
                         currentEmailAddress = sessionData.emailAddress;
                         currentProviderName = sessionData.provider;
-                        currentExpiresAt = sessionData.expiresAt; // Can be null
+                        currentExpiresAt = sessionData.expiresAt; 
                         updateSessionUI();
                         
                         clientSideMessages = loadClientSideMessagesFromLocalStorage(currentSessionId);
                         renderClientMessages();
                         
                         if (messageCheckInterval) clearInterval(messageCheckInterval);
-                        messageCheckInterval = setInterval(checkMessages, 15000); // Check every 15 seconds
-                        checkMessages(true); // Initial check
+                        messageCheckInterval = setInterval(checkMessages, 15000); 
+                        checkMessages(true); 
                         return true;
                     } else { 
-                        // Invalid session data structure
                         clearSessionFromLocalStorage(); 
                         if(sessionData.sessionId) clearClientSideDataForSession(sessionData.sessionId); 
                     }
                 } catch (e) {
                     console.error("Error parsing session data from localStorage:", e); 
                     clearSessionFromLocalStorage();
-                    // Attempt to clear messages if session ID was parseable before full error
                     try { const temp = JSON.parse(savedSession); if(temp.sessionId) clearClientSideDataForSession(temp.sessionId); } catch {}
                 }
             }
@@ -440,17 +434,14 @@
             deleteSessionBtn.classList.remove('hidden');
             copyEmailBtn.classList.remove('hidden');
             
-            // Update provider select if options are loaded
             if (providerSelect.options.length > 1) {
                 providerSelect.value = currentProviderName;
             } else {
-                 // If providers not loaded yet, try again after a short delay
                  setTimeout(() => { if (providerSelect.options.length > 1) providerSelect.value = currentProviderName; }, 500);
             }
-            // Show/hide rush mode based on provider
             if (currentProviderName === 'tempmail.lol') {
                 rushModeContainer.classList.remove('hidden');
-                rushModeContainer.classList.add('flex'); // Use flex for items-center
+                rushModeContainer.classList.add('flex'); 
             } else {
                 rushModeContainer.classList.add('hidden');
                 rushModeContainer.classList.remove('flex');
@@ -459,7 +450,7 @@
 
         async function generateEmail() {
             clearError();
-            if (currentSessionId) clearClientSideDataForSession(currentSessionId); // Clear old messages
+            if (currentSessionId) clearClientSideDataForSession(currentSessionId); 
             if (messageCheckInterval) clearInterval(messageCheckInterval);
 
             const selectedProvider = providerSelect.value;
@@ -467,7 +458,7 @@
             if (selectedProvider && selectedProvider !== "random") {
                 urlParams.provider = selectedProvider;
             }
-            if (selectedProvider === 'tempmail.lol') { // Only apply rush_mode for tempmail.lol
+            if (selectedProvider === 'tempmail.lol') { 
                 urlParams.rush_mode = rushModeToggle.checked;
             }
 
@@ -477,13 +468,13 @@
                 currentSessionId = result.data.api_session_id;
                 currentEmailAddress = result.data.email_address;
                 currentProviderName = result.data.provider;
-                currentExpiresAt = result.data.expires_at; // Store expiration
+                currentExpiresAt = result.data.expires_at; 
                 
-                clientSideMessages = []; // Reset client-side messages for new session
+                clientSideMessages = []; 
                 updateSessionUI();
                 saveSessionToLocalStorage();
-                saveClientSideMessagesToLocalStorage(currentSessionId); // Save empty messages initially
-                renderClientMessages(); // Render (will show placeholder)
+                saveClientSideMessagesToLocalStorage(currentSessionId); 
+                renderClientMessages(); 
                 
                 if (messageCheckInterval) clearInterval(messageCheckInterval);
                 messageCheckInterval = setInterval(checkMessages, 15000);
@@ -499,21 +490,20 @@
             const result = await apiRequest(`/sessions/${currentSessionId}/messages`, 'GET', null, null, isManualClick ? checkMessagesBtn : null, isManualClick ? loadingMessages : null);
 
             if (result.success && result.data) {
-                clientSideMessages = result.data; // API is now the source of truth for the current list
+                clientSideMessages = result.data; 
                 renderClientMessages();
-                saveClientSideMessagesToLocalStorage(currentSessionId); // Save updated messages
+                saveClientSideMessagesToLocalStorage(currentSessionId); 
 
-            } else if (result.status === 404) { // Session not found on server (e.g., expired)
+            } else if (result.status === 404) { 
                 if (messageCheckInterval) clearInterval(messageCheckInterval);
                 clearClientSideDataForSession(currentSessionId);
                 currentSessionId = null; currentEmailAddress = null; currentProviderName = null; currentExpiresAt = null;
                 emailInfoDiv.classList.add('hidden'); checkMessagesBtn.classList.add('hidden');
                 deleteSessionBtn.classList.add('hidden'); copyEmailBtn.classList.add('hidden');
                 clearSessionFromLocalStorage();
-                renderClientMessages(); // Clear displayed messages
+                renderClientMessages(); 
                 if(isManualClick) displayError(result.error?.detail || 'Session not found on server. Local messages cleared.');
             } else if (isManualClick && !result.success) {
-                // Error already displayed by apiRequest
             }
         }
 
@@ -533,7 +523,6 @@
             messageDiv.dataset.messageId = message.id;
 
             let fromDisplay = escapeHTML(message.from_address || 'Unknown Sender');
-            // Attempt to get a more descriptive 'from' if available in raw data
             if (message.raw && typeof message.raw.from === 'string' && message.raw.from.trim() !== '') {
                 fromDisplay = escapeHTML(message.raw.from);
             } else if (message.raw && typeof message.raw.mail_from === 'string' && message.raw.mail_from.trim() !== '') {
@@ -543,7 +532,7 @@
             const dateText = escapeHTML(message.date ? new Date(message.date).toLocaleString() : 'Unknown Date');
             const bodyText = escapeHTML(message.body || '(No text body)');
             
-            const deleteBtnId = `delete-msg-${message.id.replace(/[^a-zA-Z0-9-_]/g, '')}`; // Sanitize ID for DOM
+            const deleteBtnId = `delete-msg-${message.id.replace(/[^a-zA-Z0-9-_]/g, '')}`; 
 
             messageDiv.innerHTML = `
                 <div class="flex justify-between items-start border-b border-slate-200 pb-2 mb-2">
@@ -579,7 +568,7 @@
                 pTag.className = 'font-medium text-slate-700 mb-1 text-sm';
                 pTag.textContent = 'HTML View:';
                 const iframe = document.createElement('iframe');
-                iframe.sandbox = 'allow-same-origin'; // Basic sandboxing for security
+                iframe.sandbox = 'allow-same-origin'; 
                 iframe.srcdoc = rawHtml;
                 iframeContainer.appendChild(pTag);
                 iframeContainer.appendChild(iframe);
@@ -588,7 +577,6 @@
             }
             messagesContainer.appendChild(messageDiv);
             
-            // Add event listener to the newly created delete button
             const deleteButton = messageDiv.querySelector(`#${deleteBtnId}`);
             if(deleteButton) {
                 deleteButton.addEventListener('click', handleDeleteMessage);
@@ -602,15 +590,12 @@
             const result = await apiRequest(`/sessions/${currentSessionId}/messages/${messageIdToDelete}`, 'DELETE', null, null, event.currentTarget);
 
             if (result.success) {
-                // Remove from client-side array and re-render
                 clientSideMessages = clientSideMessages.filter(msg => msg.id !== messageIdToDelete);
-                saveClientSideMessagesToLocalStorage(currentSessionId); // Update localStorage
-                renderClientMessages(); // Re-render the messages list
+                saveClientSideMessagesToLocalStorage(currentSessionId); 
+                renderClientMessages(); 
                 displaySuccess(`Message (ID: ${messageIdToDelete.substring(0,8)}...) deleted.`);
             } else {
                 displayError(`Failed to delete message (ID: ${messageIdToDelete.substring(0,8)}...). It might have already been removed or an error occurred.`);
-                // Optionally, re-fetch messages to ensure client is in sync if server-side delete failed unexpectedly
-                // checkMessages(); 
             }
         }
 
@@ -621,16 +606,15 @@
             const result = await apiRequest(`/sessions/${currentSessionId}`, 'DELETE', null, null, deleteSessionBtn);
 
             if (result.success) {
-                clearClientSideDataForSession(currentSessionId); // Clear messages for this session
+                clearClientSideDataForSession(currentSessionId); 
                 currentSessionId = null; currentEmailAddress = null; currentProviderName = null; currentExpiresAt = null;
                 emailInfoDiv.classList.add('hidden'); checkMessagesBtn.classList.add('hidden');
                 deleteSessionBtn.classList.add('hidden'); copyEmailBtn.classList.add('hidden');
                 clearSessionFromLocalStorage();
-                renderClientMessages(); // Clear displayed messages
+                renderClientMessages(); 
                 emailAddressP.textContent = ''; sessionIdP.textContent = '';
                 emailProviderP.textContent = ''; emailExpiresP.textContent = 'Not specified';
                 displaySuccess('Session deleted successfully.');
-                // Hide rush mode if it was visible
                 rushModeContainer.classList.add('hidden');
                 rushModeContainer.classList.remove('flex');
             }
@@ -638,7 +622,6 @@
 
         async function fetchInitialProviders() {
             try {
-                // Use apiRequest for consistency and error handling
                 const result = await apiRequest('/providers'); 
                 if (result.success && result.data) {
                     result.data.forEach(provider => {
@@ -675,7 +658,6 @@
         checkMessagesBtn.addEventListener('click', () => checkMessages(true));
         deleteSessionBtn.addEventListener('click', deleteSession);
 
-        // Sidebar Toggle Functionality
         const sidebarToggle = document.getElementById('sidebarToggle');
         const closeSidebarBtn = document.getElementById('closeSidebarBtn');
         const sidebar = document.getElementById('sidebar');
@@ -686,27 +668,23 @@
             sidebar.classList.toggle('translate-x-0', !isOpen);
             sidebar.classList.toggle('-translate-x-full', isOpen);
             
-            // Hide/show the toggle button itself
             sidebarToggle.classList.toggle('opacity-0', !isOpen); 
             sidebarToggle.classList.toggle('pointer-events-none', !isOpen); 
             
             sidebarBackdrop.classList.toggle('opacity-0', isOpen);
             sidebarBackdrop.classList.toggle('pointer-events-none', isOpen);
-            document.body.classList.toggle('overflow-hidden', !isOpen); // Prevent body scroll when sidebar is open
+            document.body.classList.toggle('overflow-hidden', !isOpen); 
         }
 
         sidebarToggle.addEventListener('click', toggleSidebar);
         closeSidebarBtn.addEventListener('click', toggleSidebar);
-        sidebarBackdrop.addEventListener('click', toggleSidebar); // Close sidebar on backdrop click
+        sidebarBackdrop.addEventListener('click', toggleSidebar); 
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             await fetchInitialProviders();
             if (!loadSessionFromLocalStorage()) {
-                // No active session found, show placeholder
                 showPlaceholderMessage(messagesContainer, 'Generate an email to get started.');
             }
-            // Ensure rush mode visibility is correct on load if a session was loaded
             if (currentProviderName === 'tempmail.lol') {
                 rushModeContainer.classList.remove('hidden');
                 rushModeContainer.classList.add('flex');

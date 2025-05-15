@@ -269,7 +269,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = ''; // This will be the root of your FastAPI app
+        const API_BASE_URL = ''; 
         let G_CURRENT_SESSION_ID = null;
         let G_CURRENT_EMAIL = null;
         let G_CURRENT_PROVIDER = null;
@@ -363,8 +363,7 @@
 
         function escapeForSrcdoc(str) {
             if (typeof str !== 'string') return '';
-            // Escape backticks and ${} sequences for srcdoc
-            return str.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+            return str.replace(/`/g, '\\`').replace(/\$\{/g, '\\${}');
         }
 
 
@@ -395,13 +394,11 @@
                 const response = await fetch(url, options);
                 if (buttonElement && originalButtonText) buttonElement.innerHTML = originalButtonText;
 
-                if (response.status === 204) { // Handle 204 No Content (e.g., for DELETE)
+                if (response.status === 204) { 
                      if (buttonElement) buttonElement.disabled = false;
                     return { success: true, status: 204, data: null };
                 }
 
-                // Try to parse JSON, but if it fails and response is ok, still return success.
-                // If response is not ok, try to parse JSON for error details.
                 let responseData;
                 try {
                     responseData = await response.json();
@@ -433,25 +430,22 @@
 
         function displayMessageInDocs(containerId, messageData, append = false) {
             const container = document.getElementById(containerId);
-            if (!append) { // If not appending, clear existing messages and the set of displayed IDs
+            if (!append) { 
                 container.innerHTML = '';
                 G_DISPLAYED_MESSAGE_IDS.clear();
             }
 
             if (!messageData || messageData.length === 0) {
-                // Only show "No messages" if the container is truly empty (no other messages already there)
                 if (container.querySelectorAll('.message-item').length === 0) {
                     container.innerHTML = '<p class="text-slate-500 p-2 placeholder-message">No messages found.</p>';
                 }
                 return;
             }
 
-            // Remove placeholder if it exists and we are about to add messages
             const placeholder = container.querySelector('p.placeholder-message');
             if (placeholder) placeholder.remove();
 
             messageData.forEach(msg => {
-                // If appending, skip if this message ID has already been displayed
                 if (G_DISPLAYED_MESSAGE_IDS.has(msg.id) && append) return;
 
                 const msgDiv = document.createElement('div');
@@ -490,7 +484,7 @@
                     </details>
                 `;
                 container.appendChild(msgDiv);
-                if (append) G_DISPLAYED_MESSAGE_IDS.add(msg.id); // Add to set if we appended it
+                if (append) G_DISPLAYED_MESSAGE_IDS.add(msg.id); 
             });
         }
 
@@ -506,7 +500,6 @@
             if (provider && provider.toLowerCase() !== 'random') {
                 params.provider = provider;
             }
-            // Apply rush_mode if the selected provider is tempmail.lol, or if provider is 'random' (as tempmail.lol might be chosen)
             if ((provider && provider.toLowerCase() === 'tempmail.lol') || !provider || provider.toLowerCase() === 'random') {
                  params.rush_mode = rushMode;
             }
@@ -526,7 +519,7 @@
                 return;
             }
             const params = { provider_name: providerName };
-             if (providerName.toLowerCase() === 'tempmail.lol') params.rush_mode = rushMode; // Only apply rush_mode for tempmail.lol
+             if (providerName.toLowerCase() === 'tempmail.lol') params.rush_mode = rushMode; 
 
             const result = await apiRequest('/sessions', 'POST', null, params, e.target);
             document.getElementById('createSessionResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error creating session.';
@@ -544,19 +537,16 @@
                 return;
             }
 
-            // If the session ID being fetched is different from the one we last fetched for, clear the display.
             if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionIdToUse) {
-                document.getElementById('messagesResponse').innerHTML = ''; // Clear old messages
-                G_DISPLAYED_MESSAGE_IDS.clear(); // Clear the set of displayed IDs
-                G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse; // Update tracker
+                document.getElementById('messagesResponse').innerHTML = ''; 
+                G_DISPLAYED_MESSAGE_IDS.clear(); 
+                G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse; 
             }
 
             const result = await apiRequest(`/sessions/${sessionIdToUse}/messages`, 'GET', null, null, e.target);
             if (result.success) {
-                // displayMessageInDocs now handles appending and avoiding duplicates based on G_DISPLAYED_MESSAGE_IDS
-                displayMessageInDocs('messagesResponse', result.data, true); // Append new messages
+                displayMessageInDocs('messagesResponse', result.data, true); 
             } else {
-                 // Only show error if no messages are currently displayed (e.g., initial fetch failed)
                  const messagesResponseDiv = document.getElementById('messagesResponse');
                  if(messagesResponseDiv.querySelectorAll('.message-item').length === 0) {
                     messagesResponseDiv.innerHTML = '<p class="text-red-600 p-2 placeholder-message">Error fetching messages.</p>';
@@ -582,9 +572,7 @@
             const responseOutput = document.getElementById('deleteMessageResponse');
             if (result.success && result.status === 204) {
                 responseOutput.textContent = `Message ${messageId} deleted successfully from session ${sessionIdToUse.substring(0,10)}... (Status: 204 No Content)`;
-                // If this message was displayed in the messages list for the currently tracked session, remove it
                 if (sessionIdToUse === G_FETCH_MESSAGES_SESSION_ID_TRACKER) {
-                    // Find the specific message element by its displayed ID and remove it
                     const msgElements = document.querySelectorAll('#messagesResponse .message-item');
                     msgElements.forEach(el => {
                         const idSpan = el.querySelector('p span.font-mono.select-all');
@@ -592,8 +580,7 @@
                             el.remove();
                         }
                     });
-                    G_DISPLAYED_MESSAGE_IDS.delete(messageId); // Remove from our set of displayed IDs
-                     // If no messages are left, show the placeholder
+                    G_DISPLAYED_MESSAGE_IDS.delete(messageId); 
                     if (document.getElementById('messagesResponse').querySelectorAll('.message-item').length === 0) {
                         document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">No messages found (or last one deleted).</p>';
                     }
@@ -613,21 +600,20 @@
             }
             const result = await apiRequest(`/sessions/${sessionIdToUse}`, 'DELETE', null, null, e.target);
             document.getElementById('deleteSessionResponse').textContent = result.success ? `Session ${sessionIdToUse.substring(0,15)}... deleted (Status: ${result.status})` : `Failed to delete (Status: ${result.status || 'N/A'})`;
-            if (result.success && sessionIdToUse === G_CURRENT_SESSION_ID) { // If the deleted session was the current global one
-                updateGlobalSessionInfo(null, null, null); // Clear global session info
-                 document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">Current session deleted.</p>'; // Update messages display
+            if (result.success && sessionIdToUse === G_CURRENT_SESSION_ID) { 
+                updateGlobalSessionInfo(null, null, null); 
+                 document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">Current session deleted.</p>'; 
                  G_DISPLAYED_MESSAGE_IDS.clear();
             }
         });
 
-        // Initial load actions
         (async () => {
-            loadDocsSessionFromLocalStorage(); // Load any saved session for the docs page
+            loadDocsSessionFromLocalStorage(); 
             const btn = document.getElementById('fetchProvidersBtn');
-            if (btn) { // Ensure button exists before trying to use it
+            if (btn) { 
                 const result = await apiRequest('/providers', 'GET', null, null, btn);
                 const providersResponseEl = document.getElementById('providersResponse');
-                if (providersResponseEl) { // Ensure element exists
+                if (providersResponseEl) { 
                     providersResponseEl.textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error fetching providers on load.';
                 }
             }
