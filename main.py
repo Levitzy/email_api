@@ -27,7 +27,7 @@ logging.basicConfig(
 )
 LOGGER = logging.getLogger("temp-mail-api")
 
-CONFIG_DIR = Path.home() / ".config" / "tempmail-api"
+CONFIG_DIR = Path("/tmp") / "tempmail-api-data"
 ACTIVE_SESSIONS_FILE = CONFIG_DIR / "active_sessions.json"
 ACTIVE_SESSIONS_FILE_TEMP = CONFIG_DIR / "active_sessions.json.tmp"
 SESSION_EXPIRY_DAYS = 7
@@ -1008,46 +1008,34 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
             status_code=500, detail=f"Failed to fetch messages from provider: {str(e)}"
         )
 
-    # Current messages_cache for the session (reflects any user deletions)
-    # This is a list of dicts
     session_message_cache_list = session_data.get("messages_cache", [])
-    # Convert to a map for efficient add/update. Keyed by message ID.
     session_message_cache_map = {
         msg_dict["id"]: msg_dict for msg_dict in session_message_cache_list
     }
 
     cache_needs_saving = False
 
-    for (
-        provider_msg_data_dict
-    ) in provider_messages_list:  # These are dicts from provider
+    for provider_msg_data_dict in provider_messages_list:
         if not isinstance(provider_msg_data_dict, dict):
             continue
 
         provider_msg_id = str(provider_msg_data_dict.get("id", _rand_string()))
-        provider_msg_data_dict["id"] = provider_msg_id  # Ensure ID is in the dict
+        provider_msg_data_dict["id"] = provider_msg_id
 
-        # If message from provider is not in our session's cache map, it's new, add it.
         if provider_msg_id not in session_message_cache_map:
             session_message_cache_map[provider_msg_id] = provider_msg_data_dict
             cache_needs_saving = True
         else:
-            # Optionally, update existing message if provider's version is different (e.g. content update)
-            # For simplicity, we can assume provider's version is more current if ID matches.
-            # Or, compare timestamps if available and reliable.
-            # For now, let's just update if the raw content differs to catch any changes.
             if session_message_cache_map[provider_msg_id] != provider_msg_data_dict:
                 session_message_cache_map[provider_msg_id] = provider_msg_data_dict
                 cache_needs_saving = True
 
     if cache_needs_saving:
-        # Convert map back to list for storage
         updated_cache_list = list(session_message_cache_map.values())
         session_data["messages_cache"] = updated_cache_list
         session_data["last_saved_at"] = datetime.now(timezone.utc)
         save_active_sessions()
 
-    # The list to be returned is the current state of the session's cache
     final_messages_to_return_dicts = list(session_message_cache_map.values())
 
     try:
