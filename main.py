@@ -15,7 +15,7 @@ import shutil
 
 import requests
 import uvicorn
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Path as FastAPIPath
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel, EmailStr, Field
 import asyncio
@@ -45,7 +45,6 @@ def save_active_sessions() -> None:
         sessions_to_save = {}
         for session_id, data in active_api_sessions.items():
             session_copy = data.copy()
-            # Ensure messages_cache is serializable (already list of dicts)
             session_copy["messages_cache"] = data.get("messages_cache", [])
             for key in ["created_at", "last_accessed_at", "last_saved_at"]:
                 if key in session_copy and isinstance(session_copy[key], datetime):
@@ -104,9 +103,7 @@ def load_active_sessions() -> None:
                             f"Could not parse last_accessed_at for session {session_id}: {last_accessed_str}"
                         )
 
-                data["messages_cache"] = data.get(
-                    "messages_cache", []
-                )  # Ensure it exists
+                data["messages_cache"] = data.get("messages_cache", [])
 
                 for key in ["created_at", "last_accessed_at", "last_saved_at"]:
                     if key in data and isinstance(data[key], str):
@@ -774,7 +771,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Temp Mail API",
     description="API for temporary emails.",
-    version="1.5.0",
+    version="1.5.2",
     docs_url=None,
     redoc_url=None,
     lifespan=lifespan,
@@ -867,7 +864,7 @@ async def create_email_session(
         "provider_name": provider_name,
         "email_address": email_address,
         "provider_specific_data": provider_specific_data,
-        "messages_cache": [],  # Initialize empty message cache
+        "messages_cache": [],
         "created_at": created_at_dt,
         "last_accessed_at": created_at_dt,
         "last_saved_at": created_at_dt,
@@ -938,7 +935,7 @@ async def generate_email_address(
         "provider_name": provider_to_use,
         "email_address": email_address,
         "provider_specific_data": provider_specific_data,
-        "messages_cache": [],  # Initialize empty message cache
+        "messages_cache": [],
         "created_at": created_at_dt,
         "last_accessed_at": created_at_dt,
         "last_saved_at": created_at_dt,
@@ -978,9 +975,7 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
     provider_name = session_data["provider_name"]
     fetch_func = PROVIDER_FETCH_FUNCTIONS[provider_name]
     provider_specific_data = session_data["provider_specific_data"]
-    provider_specific_data["api_session_id"] = (
-        api_session_id  # For context within fetch functions
-    )
+    provider_specific_data["api_session_id"] = api_session_id
 
     try:
         provider_messages_list = await fetch_func(provider_specific_data)
@@ -1001,9 +996,9 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
                 status_code=404,
                 detail=f"API session {api_session_id} no longer valid or expired by provider.",
             ) from e
-        raise e  # Re-raise other APIErrors
+        raise e
     except NetworkError as e:
-        raise e  # Re-raise NetworkErrors
+        raise e
     except Exception as e:
         LOGGER.error(
             f"Error fetching messages from provider for {api_session_id} ({provider_name}): {e}",
@@ -1013,24 +1008,50 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
             status_code=500, detail=f"Failed to fetch messages from provider: {str(e)}"
         )
 
-    # Merge provider messages with existing cache
-    cached_messages_list = session_data.get("messages_cache", [])
-    message_map_for_merge = {msg["id"]: msg for msg in cached_messages_list}
+    # Current messages_cache for the session (reflects any user deletions)
+    # This is a list of dicts
+    session_message_cache_list = session_data.get("messages_cache", [])
+    # Convert to a map for efficient add/update. Keyed by message ID.
+    session_message_cache_map = {
+        msg_dict["id"]: msg_dict for msg_dict in session_message_cache_list
+    }
 
-    for provider_msg_dict in provider_messages_list:
-        if not isinstance(provider_msg_dict, dict):
-            continue  # Skip if not a dict
-        msg_id = str(provider_msg_dict.get("id", _rand_string()))
-        provider_msg_dict["id"] = msg_id  # Ensure ID is set for the map key
-        message_map_for_merge[msg_id] = provider_msg_dict  # Add new or update existing
+    cache_needs_saving = False
 
-    updated_messages_cache = list(message_map_for_merge.values())
-    session_data["messages_cache"] = updated_messages_cache
+    for (
+        provider_msg_data_dict
+    ) in provider_messages_list:  # These are dicts from provider
+        if not isinstance(provider_msg_data_dict, dict):
+            continue
 
-    # Sort messages by date if possible, most recent first, before returning
-    # This is for consistent client display if they don't sort
+        provider_msg_id = str(provider_msg_data_dict.get("id", _rand_string()))
+        provider_msg_data_dict["id"] = provider_msg_id  # Ensure ID is in the dict
+
+        # If message from provider is not in our session's cache map, it's new, add it.
+        if provider_msg_id not in session_message_cache_map:
+            session_message_cache_map[provider_msg_id] = provider_msg_data_dict
+            cache_needs_saving = True
+        else:
+            # Optionally, update existing message if provider's version is different (e.g. content update)
+            # For simplicity, we can assume provider's version is more current if ID matches.
+            # Or, compare timestamps if available and reliable.
+            # For now, let's just update if the raw content differs to catch any changes.
+            if session_message_cache_map[provider_msg_id] != provider_msg_data_dict:
+                session_message_cache_map[provider_msg_id] = provider_msg_data_dict
+                cache_needs_saving = True
+
+    if cache_needs_saving:
+        # Convert map back to list for storage
+        updated_cache_list = list(session_message_cache_map.values())
+        session_data["messages_cache"] = updated_cache_list
+        session_data["last_saved_at"] = datetime.now(timezone.utc)
+        save_active_sessions()
+
+    # The list to be returned is the current state of the session's cache
+    final_messages_to_return_dicts = list(session_message_cache_map.values())
+
     try:
-        updated_messages_cache.sort(
+        final_messages_to_return_dicts.sort(
             key=lambda m: (
                 datetime.fromisoformat(m["date"].replace("Z", "+00:00"))
                 if m.get("date")
@@ -1043,12 +1064,8 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
             f"Could not sort messages by date for session {api_session_id}: {sort_e}"
         )
 
-    session_data["last_saved_at"] = datetime.now(timezone.utc)
-    save_active_sessions()  # Persist the updated cache and access times
-
-    # Convert list of dicts to list of Pydantic Message models for response
     response_messages: List[Message] = []
-    for msg_dict in updated_messages_cache:
+    for msg_dict in final_messages_to_return_dicts:
         try:
             msg_id_for_model = str(msg_dict.get("id"))
             raw_data_for_model = {k: v for k, v in msg_dict.items() if k != "id"}
@@ -1063,6 +1080,42 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
 
 
 @app.delete(
+    "/sessions/{api_session_id}/messages/{message_id}",
+    status_code=204,
+    summary="Delete a specific message from a session's cache",
+)
+async def delete_message_from_session_cache(
+    api_session_id: str = FastAPIPath(..., description="The ID of the API session"),
+    message_id: str = FastAPIPath(..., description="The ID of the message to delete"),
+):
+    if api_session_id not in active_api_sessions:
+        load_active_sessions()
+        if api_session_id not in active_api_sessions:
+            raise HTTPException(status_code=404, detail="API session not found.")
+
+    session_data = active_api_sessions[api_session_id]
+
+    messages_cache = session_data.get("messages_cache", [])
+
+    initial_cache_length = len(messages_cache)
+    messages_cache = [msg for msg in messages_cache if str(msg.get("id")) != message_id]
+
+    if len(messages_cache) < initial_cache_length:
+        session_data["messages_cache"] = messages_cache
+        session_data["last_saved_at"] = datetime.now(timezone.utc)
+        save_active_sessions()
+        LOGGER.info(
+            f"Message {message_id} deleted from cache for session {api_session_id}."
+        )
+        return
+    else:
+        LOGGER.info(
+            f"Message {message_id} not found in cache for session {api_session_id}, no action taken."
+        )
+        return
+
+
+@app.delete(
     "/sessions/{api_session_id}",
     status_code=204,
     summary="Delete an active email session",
@@ -1072,12 +1125,11 @@ async def delete_email_session(api_session_id: str):
         del active_api_sessions[api_session_id]
         save_active_sessions()
         return
-    load_active_sessions()  # Try loading from disk if not in memory
+    load_active_sessions()
     if api_session_id in active_api_sessions:
         del active_api_sessions[api_session_id]
         save_active_sessions()
         return
-    # If still not found after reload, then it's a 404
     raise HTTPException(status_code=404, detail="API session not found.")
 
 

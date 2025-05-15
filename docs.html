@@ -80,7 +80,10 @@
 </head>
 <body class="bg-slate-100 text-slate-800 p-3 sm:p-4 md:p-8">
     <div class="container mx-auto max-w-5xl">
-        <header class="mb-8 md:mb-12 text-center">
+        <header class="mb-4 md:mb-6 text-center">
+            <div class="flex justify-start mb-4">
+                 <a href="/" class="text-sky-600 hover:text-sky-700 font-medium transition-colors">&larr; Back to App</a>
+            </div>
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-700">Temp Mail API Interface</h1>
             <p class="text-slate-600 mt-2 sm:mt-3 text-base sm:text-lg">Interact with and test the Temp Mail API endpoints.</p>
         </header>
@@ -102,7 +105,7 @@
         <div class="space-y-6 md:space-y-8">
 
             <section id="api-providers" class="api-endpoint api-get bg-white p-4 sm:p-6 rounded-xl shadow-lg">
-                <details>
+                <details open>
                     <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
                         <div class="flex items-center">
                             <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2 sm:mr-3">GET</span>
@@ -127,16 +130,17 @@
                             <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2 sm:mr-3">POST</span>
                             <span>/gen</span>
                         </div>
-                        <span class="text-sm sm:text-lg text-slate-500">Generate Email (Quick)</span>
+                        <span class="text-sm sm:text-lg text-slate-500">Generate Email (Quick/Random)</span>
                     </summary>
                     <div class="mt-4 pt-4 border-t border-slate-200">
+                        <p class="text-xs text-slate-500 mb-2">Note: This endpoint also supports GET requests.</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label for="genProvider" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Provider (optional):</label>
                                 <input type="text" id="genProvider" name="genProvider" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="e.g., mail.tm, random">
                             </div>
                             <div>
-                                <label for="genRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (tempmail.lol):</label>
+                                <label for="genRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (for tempmail.lol):</label>
                                 <select id="genRushMode" name="genRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
                                     <option value="false">False</option>
                                     <option value="true">True</option>
@@ -159,7 +163,7 @@
                             <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2 sm:mr-3">POST</span>
                             <span>/sessions</span>
                         </div>
-                        <span class="text-sm sm:text-lg text-slate-500">Create Session (Specific)</span>
+                        <span class="text-sm sm:text-lg text-slate-500">Create Session (Specific Provider)</span>
                     </summary>
                     <div class="mt-4 pt-4 border-t border-slate-200">
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -168,7 +172,7 @@
                                 <input type="text" id="sessionProviderName" name="sessionProviderName" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="e.g., mail.tm">
                             </div>
                             <div>
-                                <label for="sessionRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (tempmail.lol):</label>
+                                <label for="sessionRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (for tempmail.lol):</label>
                                 <select id="sessionRushMode" name="sessionRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
                                     <option value="false">False</option>
                                     <option value="true">True</option>
@@ -189,9 +193,9 @@
                     <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
                          <div class="flex items-center">
                             <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2 sm:mr-3">GET</span>
-                            <span>/sessions/.../messages</span>
+                            <span>/sessions/{api_session_id}/messages</span>
                         </div>
-                        <span class="text-sm sm:text-lg text-slate-500">Fetch Messages</span>
+                        <span class="text-sm sm:text-lg text-slate-500">Fetch Messages for Session</span>
                     </summary>
                     <div class="mt-4 pt-4 border-t border-slate-200">
                         <div class="mb-4">
@@ -207,12 +211,41 @@
                 </details>
             </section>
 
+            <section id="api-delete-message" class="api-endpoint api-delete bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <details>
+                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="font-mono text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-md mr-2 sm:mr-3">DELETE</span>
+                            <span>/sessions/{api_session_id}/messages/{message_id}</span>
+                        </div>
+                        <span class="text-sm sm:text-lg text-slate-500">Delete Specific Message</span>
+                    </summary>
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="deleteMessageSessionId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">API Session ID (current if blank):</label>
+                                <input type="text" id="deleteMessageSessionId" name="deleteMessageSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="Uses current session ID">
+                            </div>
+                            <div>
+                                <label for="deleteMessageId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Message ID (required):</label>
+                                <input type="text" id="deleteMessageId" name="deleteMessageId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="Enter Message ID">
+                            </div>
+                        </div>
+                        <button id="deleteMessageBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Delete Message</button>
+                        <div class="mt-4 p-3 bg-slate-50 rounded-md">
+                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
+                            <pre id="deleteMessageResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
             <section id="api-delete-session" class="api-endpoint api-delete bg-white p-4 sm:p-6 rounded-xl shadow-lg">
                 <details>
                     <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
                         <div class="flex items-center">
                             <span class="font-mono text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-md mr-2 sm:mr-3">DELETE</span>
-                            <span>/sessions/...</span>
+                            <span>/sessions/{api_session_id}</span>
                         </div>
                         <span class="text-sm sm:text-lg text-slate-500">Delete Session</span>
                     </summary>
@@ -229,35 +262,6 @@
                     </div>
                 </details>
             </section>
-
-            <section id="api-history" class="api-endpoint api-get bg-white p-4 sm:p-6 rounded-xl shadow-lg">
-                <details>
-                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
-                        <div class="flex items-center">
-                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2 sm:mr-3">GET</span>
-                            <span>/history</span>
-                        </div>
-                        <span class="text-sm sm:text-lg text-slate-500">View Message History</span>
-                    </summary>
-                    <div class="mt-4 pt-4 border-t border-slate-200">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label for="historyPage" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Page:</label>
-                                <input type="number" id="historyPage" name="historyPage" value="1" min="1" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
-                            </div>
-                            <div>
-                                <label for="historyPageSize" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Page Size:</label>
-                                <input type="number" id="historyPageSize" name="historyPageSize" value="10" min="1" max="100" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
-                            </div>
-                        </div>
-                        <button id="fetchHistoryBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Fetch History</button>
-                        <div class="mt-4 p-3 bg-slate-50 rounded-md">
-                            <h4 class="font-medium text-slate-600 mb-2 text-sm">History:</h4>
-                            <div id="historyResponse" class="text-xs sm:text-sm space-y-3 max-h-96 overflow-y-auto custom-scrollbar p-1"></div>
-                        </div>
-                    </div>
-                </details>
-            </section>
         </div>
         <footer class="mt-12 py-6 text-center text-slate-500 text-sm">
             Temp Mail API Interface &copy; 2024-2025
@@ -265,7 +269,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = '';
+        const API_BASE_URL = ''; // This will be the root of your FastAPI app
         let G_CURRENT_SESSION_ID = null;
         let G_CURRENT_EMAIL = null;
         let G_CURRENT_PROVIDER = null;
@@ -335,13 +339,19 @@
 
             const messagesSessionIdInput = document.getElementById('messagesSessionId');
             const deleteSessionIdInput = document.getElementById('deleteSessionId');
+            const deleteMessageSessionIdInput = document.getElementById('deleteMessageSessionId');
+
 
             if (sessionId) {
-                messagesSessionIdInput.placeholder = `Current: ${sessionId.substring(0,10)}...`;
-                deleteSessionIdInput.placeholder = `Current: ${sessionId.substring(0,10)}...`;
+                const placeholderText = `Current: ${sessionId.substring(0,10)}...`;
+                messagesSessionIdInput.placeholder = placeholderText;
+                deleteSessionIdInput.placeholder = placeholderText;
+                deleteMessageSessionIdInput.placeholder = placeholderText;
             } else {
-                 messagesSessionIdInput.placeholder = 'Enter Session ID';
-                 deleteSessionIdInput.placeholder = 'Enter Session ID';
+                 const placeholderText = 'Enter Session ID';
+                 messagesSessionIdInput.placeholder = placeholderText;
+                 deleteSessionIdInput.placeholder = placeholderText;
+                 deleteMessageSessionIdInput.placeholder = placeholderText;
             }
             if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionId) {
                 document.getElementById('messagesResponse').innerHTML = '';
@@ -353,6 +363,7 @@
 
         function escapeForSrcdoc(str) {
             if (typeof str !== 'string') return '';
+            // Escape backticks and ${} sequences for srcdoc
             return str.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
         }
 
@@ -384,16 +395,24 @@
                 const response = await fetch(url, options);
                 if (buttonElement && originalButtonText) buttonElement.innerHTML = originalButtonText;
 
-                if (response.status === 204) {
+                if (response.status === 204) { // Handle 204 No Content (e.g., for DELETE)
                      if (buttonElement) buttonElement.disabled = false;
                     return { success: true, status: 204, data: null };
                 }
 
-                const responseData = await response.json().catch(e => {
-                    console.warn("Response was not JSON", e);
-                    if (response.ok) return { detail: "Response was not JSON, but status was OK."};
-                    return { detail: `Server returned non-JSON response with status ${response.status}` };
-                });
+                // Try to parse JSON, but if it fails and response is ok, still return success.
+                // If response is not ok, try to parse JSON for error details.
+                let responseData;
+                try {
+                    responseData = await response.json();
+                } catch (e) {
+                    if (response.ok) {
+                         responseData = { detail: "Response was not JSON, but status was OK."};
+                    } else {
+                        responseData = { detail: `Server returned non-JSON response with status ${response.status}` };
+                    }
+                }
+                
 
                 if (!response.ok) {
                     throw { status: response.status, data: responseData };
@@ -414,22 +433,25 @@
 
         function displayMessageInDocs(containerId, messageData, append = false) {
             const container = document.getElementById(containerId);
-            if (!append) {
+            if (!append) { // If not appending, clear existing messages and the set of displayed IDs
                 container.innerHTML = '';
                 G_DISPLAYED_MESSAGE_IDS.clear();
             }
 
             if (!messageData || messageData.length === 0) {
+                // Only show "No messages" if the container is truly empty (no other messages already there)
                 if (container.querySelectorAll('.message-item').length === 0) {
                     container.innerHTML = '<p class="text-slate-500 p-2 placeholder-message">No messages found.</p>';
                 }
                 return;
             }
 
+            // Remove placeholder if it exists and we are about to add messages
             const placeholder = container.querySelector('p.placeholder-message');
             if (placeholder) placeholder.remove();
 
             messageData.forEach(msg => {
+                // If appending, skip if this message ID has already been displayed
                 if (G_DISPLAYED_MESSAGE_IDS.has(msg.id) && append) return;
 
                 const msgDiv = document.createElement('div');
@@ -448,7 +470,7 @@
                 let htmlContent = msg.html ? escapeForSrcdoc(Array.isArray(msg.html) ? msg.html.join('') : String(msg.html)) : '';
 
                 msgDiv.innerHTML = `
-                    <p class="text-xs text-slate-500 mb-1">ID: ${msg.id}</p>
+                    <p class="text-xs text-slate-500 mb-1">ID: <span class="font-mono select-all">${msg.id}</span></p>
                     <p class="text-sm"><strong>From:</strong> <span class="text-slate-700">${fromDisplay}</span></p>
                     <p class="text-sm"><strong>Subject:</strong> <span class="text-slate-700">${subjectText}</span></p>
                     <p class="text-xs text-slate-500 mt-1"><strong>Date:</strong> ${dateText}</p>
@@ -462,13 +484,13 @@
                             <pre class="whitespace-pre-wrap text-xs custom-scrollbar max-h-32 overflow-y-auto">${bodyText}</pre>
                             ${htmlContent ? `
                                 <p class="font-semibold mt-2 text-slate-700 text-xs">HTML Body:</p>
-                                <iframe srcdoc="${htmlContent}" sandbox="allow-same-origin" class="mt-1"></iframe>
+                                <iframe srcdoc="\`${htmlContent}\`" sandbox="allow-same-origin" class="mt-1"></iframe>
                             ` : ''}
                         </div>
                     </details>
                 `;
                 container.appendChild(msgDiv);
-                if (append) G_DISPLAYED_MESSAGE_IDS.add(msg.id);
+                if (append) G_DISPLAYED_MESSAGE_IDS.add(msg.id); // Add to set if we appended it
             });
         }
 
@@ -484,7 +506,8 @@
             if (provider && provider.toLowerCase() !== 'random') {
                 params.provider = provider;
             }
-            if ((provider && provider.toLowerCase() === 'tempmail.lol') || !provider) {
+            // Apply rush_mode if the selected provider is tempmail.lol, or if provider is 'random' (as tempmail.lol might be chosen)
+            if ((provider && provider.toLowerCase() === 'tempmail.lol') || !provider || provider.toLowerCase() === 'random') {
                  params.rush_mode = rushMode;
             }
 
@@ -503,7 +526,7 @@
                 return;
             }
             const params = { provider_name: providerName };
-             if (providerName.toLowerCase() === 'tempmail.lol') params.rush_mode = rushMode;
+             if (providerName.toLowerCase() === 'tempmail.lol') params.rush_mode = rushMode; // Only apply rush_mode for tempmail.lol
 
             const result = await apiRequest('/sessions', 'POST', null, params, e.target);
             document.getElementById('createSessionResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error creating session.';
@@ -521,22 +544,65 @@
                 return;
             }
 
+            // If the session ID being fetched is different from the one we last fetched for, clear the display.
             if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionIdToUse) {
-                document.getElementById('messagesResponse').innerHTML = '';
-                G_DISPLAYED_MESSAGE_IDS.clear();
-                G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse;
+                document.getElementById('messagesResponse').innerHTML = ''; // Clear old messages
+                G_DISPLAYED_MESSAGE_IDS.clear(); // Clear the set of displayed IDs
+                G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse; // Update tracker
             }
 
             const result = await apiRequest(`/sessions/${sessionIdToUse}/messages`, 'GET', null, null, e.target);
             if (result.success) {
-                displayMessageInDocs('messagesResponse', result.data, true);
+                // displayMessageInDocs now handles appending and avoiding duplicates based on G_DISPLAYED_MESSAGE_IDS
+                displayMessageInDocs('messagesResponse', result.data, true); // Append new messages
             } else {
+                 // Only show error if no messages are currently displayed (e.g., initial fetch failed)
                  const messagesResponseDiv = document.getElementById('messagesResponse');
                  if(messagesResponseDiv.querySelectorAll('.message-item').length === 0) {
                     messagesResponseDiv.innerHTML = '<p class="text-red-600 p-2 placeholder-message">Error fetching messages.</p>';
                  }
             }
         });
+        
+        document.getElementById('deleteMessageBtn').addEventListener('click', async (e) => {
+            const sessionIdInput = document.getElementById('deleteMessageSessionId').value;
+            const messageId = document.getElementById('deleteMessageId').value;
+            const sessionIdToUse = sessionIdInput || G_CURRENT_SESSION_ID;
+
+            if (!sessionIdToUse) {
+                displayGlobalError("No API Session ID specified or active.");
+                return;
+            }
+            if (!messageId) {
+                displayGlobalError("Message ID is required to delete a message.");
+                return;
+            }
+
+            const result = await apiRequest(`/sessions/${sessionIdToUse}/messages/${messageId}`, 'DELETE', null, null, e.target);
+            const responseOutput = document.getElementById('deleteMessageResponse');
+            if (result.success && result.status === 204) {
+                responseOutput.textContent = `Message ${messageId} deleted successfully from session ${sessionIdToUse.substring(0,10)}... (Status: 204 No Content)`;
+                // If this message was displayed in the messages list for the currently tracked session, remove it
+                if (sessionIdToUse === G_FETCH_MESSAGES_SESSION_ID_TRACKER) {
+                    // Find the specific message element by its displayed ID and remove it
+                    const msgElements = document.querySelectorAll('#messagesResponse .message-item');
+                    msgElements.forEach(el => {
+                        const idSpan = el.querySelector('p span.font-mono.select-all');
+                        if (idSpan && idSpan.textContent === messageId) {
+                            el.remove();
+                        }
+                    });
+                    G_DISPLAYED_MESSAGE_IDS.delete(messageId); // Remove from our set of displayed IDs
+                     // If no messages are left, show the placeholder
+                    if (document.getElementById('messagesResponse').querySelectorAll('.message-item').length === 0) {
+                        document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">No messages found (or last one deleted).</p>';
+                    }
+                }
+            } else {
+                responseOutput.textContent = `Failed to delete message ${messageId}. Status: ${result.status || 'N/A'}. ${result.error?.detail || ''}`;
+            }
+        });
+
 
         document.getElementById('deleteSessionDocsBtn').addEventListener('click', async (e) => {
             const sessionIdInput = document.getElementById('deleteSessionId').value;
@@ -547,30 +613,24 @@
             }
             const result = await apiRequest(`/sessions/${sessionIdToUse}`, 'DELETE', null, null, e.target);
             document.getElementById('deleteSessionResponse').textContent = result.success ? `Session ${sessionIdToUse.substring(0,15)}... deleted (Status: ${result.status})` : `Failed to delete (Status: ${result.status || 'N/A'})`;
-            if (result.success && sessionIdToUse === G_CURRENT_SESSION_ID) {
-                updateGlobalSessionInfo(null, null, null);
-                 document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">Current session deleted.</p>';
+            if (result.success && sessionIdToUse === G_CURRENT_SESSION_ID) { // If the deleted session was the current global one
+                updateGlobalSessionInfo(null, null, null); // Clear global session info
+                 document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">Current session deleted.</p>'; // Update messages display
                  G_DISPLAYED_MESSAGE_IDS.clear();
             }
         });
 
-        document.getElementById('fetchHistoryBtn').addEventListener('click', async (e) => {
-            const page = document.getElementById('historyPage').value;
-            const pageSize = document.getElementById('historyPageSize').value;
-            const result = await apiRequest('/history', 'GET', null, { page, page_size: pageSize }, e.target);
-             if (result.success) {
-                displayMessageInDocs('historyResponse', result.data.map(item => item.message), false);
-            } else {
-                 document.getElementById('historyResponse').innerHTML = '<p class="text-red-600 p-2 placeholder-message">Error fetching history.</p>';
-            }
-        });
-
-
+        // Initial load actions
         (async () => {
-            loadDocsSessionFromLocalStorage();
+            loadDocsSessionFromLocalStorage(); // Load any saved session for the docs page
             const btn = document.getElementById('fetchProvidersBtn');
-            const result = await apiRequest('/providers', 'GET', null, null, btn);
-            document.getElementById('providersResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error fetching providers on load.';
+            if (btn) { // Ensure button exists before trying to use it
+                const result = await apiRequest('/providers', 'GET', null, null, btn);
+                const providersResponseEl = document.getElementById('providersResponse');
+                if (providersResponseEl) { // Ensure element exists
+                    providersResponseEl.textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error fetching providers on load.';
+                }
+            }
         })();
 
     </script>

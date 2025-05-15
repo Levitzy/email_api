@@ -57,9 +57,79 @@
             appearance: none;
             padding-right: 2.5rem;
         }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 28px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2563eb;
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2563eb;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+         #sidebar.translate-x-0 + #sidebarBackdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #sidebar.-translate-x-full + #sidebarBackdrop {
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-3 sm:p-4 md:p-6">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-3 sm:p-4 md:p-6 relative">
+
+    <div class="fixed top-4 left-4 z-50">
+        <button id="sidebarToggle" class="p-2 bg-white rounded-md shadow-md text-slate-600 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-opacity duration-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+    </div>
+
+    <div id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-xl transform -translate-x-full transition-transform duration-300 ease-in-out p-4 space-y-4">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-sky-600">Menu</h2>
+            <button id="closeSidebarBtn" class="p-1 text-slate-500 hover:text-slate-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <nav>
+            <a href="/docs" class="block py-2.5 px-4 rounded-lg text-slate-700 hover:bg-sky-100 hover:text-sky-700 transition-colors duration-150 ease-in-out">API Docs</a>
+        </nav>
+    </div>
+
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300 ease-in-out opacity-0 pointer-events-none"></div>
 
     <div class="w-full max-w-2xl bg-white shadow-2xl rounded-xl p-5 sm:p-6 md:p-8">
         <header class="mb-6 md:mb-8 text-center">
@@ -74,6 +144,15 @@
                     <option value="random">Random (Recommended)</option>
                 </select>
             </div>
+
+            <div id="rushModeContainer" class="mb-4 hidden items-center">
+                <label for="rushModeToggle" class="block text-sm font-medium text-slate-700 mr-3">Rush Mode (tempmail.lol):</label>
+                <label class="switch">
+                    <input type="checkbox" id="rushModeToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
 
             <div class="mb-6 space-y-3 sm:space-y-4">
                 <button id="generateEmailBtn" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75">
@@ -144,15 +223,17 @@
         const loadingMessages = document.getElementById('loadingMessages');
         const successCopyDiv = document.getElementById('successCopy');
         const providerSelect = document.getElementById('providerSelect');
+        const rushModeContainer = document.getElementById('rushModeContainer');
+        const rushModeToggle = document.getElementById('rushModeToggle');
 
-        const API_BASE_URL = '';
+        const API_BASE_URL = ''; // This will be the root of your FastAPI app
         let currentSessionId = null;
         let currentEmailAddress = null;
         let currentProviderName = null;
         let currentExpiresAt = null;
         let messageCheckInterval = null;
         
-        let clientSideMessages = []; // Holds all messages for the current session, persisted in local storage
+        let clientSideMessages = [];
 
         const LS_SESSION_KEY = 'biarMailSession';
         const LS_MESSAGES_PREFIX = 'biarMailMessages_';
@@ -168,6 +249,7 @@
             }
             if (loadingEl) loadingEl.classList.remove('hidden');
 
+            // Construct the full URL using API_BASE_URL
             const url = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin);
             if (params) {
                 Object.keys(params).forEach(key => {
@@ -184,10 +266,22 @@
 
             try {
                 const response = await fetch(url, options);
-                if (response.status === 204) {
+                if (response.status === 204) { 
                     return { success: true, status: 204, data: null };
                 }
-                const responseData = await response.json().catch(e => ({ detail: `Server returned non-JSON response with status ${response.status}` }));
+                // Try to parse JSON, but if it fails and response is ok, still return success.
+                // If response is not ok, try to parse JSON for error details.
+                let responseData;
+                try {
+                    responseData = await response.json();
+                } catch (e) {
+                    if (response.ok) {
+                         responseData = { detail: "Response was not JSON, but status was OK."};
+                    } else {
+                        responseData = { detail: `Server returned non-JSON response with status ${response.status}` };
+                    }
+                }
+                
                 if (!response.ok) {
                     throw { status: response.status, data: responseData };
                 }
@@ -268,9 +362,11 @@
             }
             return [];
         }
-
-        function clearClientSideMessagesForSession(sessionId) {
-            if (sessionId) localStorage.removeItem(`${LS_MESSAGES_PREFIX}${sessionId}`);
+        
+        function clearClientSideDataForSession(sessionId) {
+            if (sessionId) {
+                localStorage.removeItem(`${LS_MESSAGES_PREFIX}${sessionId}`);
+            }
             clientSideMessages = [];
             clearMessagesDisplayOnly();
         }
@@ -280,16 +376,14 @@
             if (clientSideMessages.length === 0) {
                 showPlaceholderMessage(messagesContainer, 'No messages in inbox.');
             } else {
-                // Sort messages by date, most recent first, if date is available and parsable
                 clientSideMessages.sort((a, b) => {
                     const dateA = a.date ? new Date(a.date).getTime() : 0;
                     const dateB = b.date ? new Date(b.date).getTime() : 0;
-                    return dateB - dateA; // Descending
+                    return dateB - dateA; // Sort descending by date
                 });
                 clientSideMessages.forEach(msg => renderMessageDOM(msg));
             }
         }
-
 
         function loadSessionFromLocalStorage() {
             const savedSession = localStorage.getItem(LS_SESSION_KEY);
@@ -297,26 +391,36 @@
                 try {
                     const sessionData = JSON.parse(savedSession);
                     if (sessionData.sessionId && sessionData.emailAddress && sessionData.provider) {
+                        // Check for expiration if expiresAt is present
                         if (sessionData.expiresAt && new Date(sessionData.expiresAt) < new Date()) {
-                            clearSessionFromLocalStorage(); clearClientSideMessagesForSession(sessionData.sessionId); return false;
+                            console.log("Session expired, clearing from localStorage.");
+                            clearSessionFromLocalStorage(); 
+                            clearClientSideDataForSession(sessionData.sessionId); 
+                            return false;
                         }
                         currentSessionId = sessionData.sessionId;
                         currentEmailAddress = sessionData.emailAddress;
                         currentProviderName = sessionData.provider;
-                        currentExpiresAt = sessionData.expiresAt;
+                        currentExpiresAt = sessionData.expiresAt; // Can be null
                         updateSessionUI();
                         
                         clientSideMessages = loadClientSideMessagesFromLocalStorage(currentSessionId);
-                        renderClientMessages(); // Render what's in local storage first
+                        renderClientMessages();
                         
                         if (messageCheckInterval) clearInterval(messageCheckInterval);
-                        messageCheckInterval = setInterval(checkMessages, 15000);
-                        checkMessages(true); // Then check server for updates
+                        messageCheckInterval = setInterval(checkMessages, 15000); // Check every 15 seconds
+                        checkMessages(true); // Initial check
                         return true;
-                    } else { clearSessionFromLocalStorage(); if(sessionData.sessionId) clearClientSideMessagesForSession(sessionData.sessionId); }
+                    } else { 
+                        // Invalid session data structure
+                        clearSessionFromLocalStorage(); 
+                        if(sessionData.sessionId) clearClientSideDataForSession(sessionData.sessionId); 
+                    }
                 } catch (e) {
-                    console.error("Error parsing session data:", e); clearSessionFromLocalStorage();
-                    try { const temp = JSON.parse(savedSession); if(temp.sessionId) clearClientSideMessagesForSession(temp.sessionId); } catch {}
+                    console.error("Error parsing session data from localStorage:", e); 
+                    clearSessionFromLocalStorage();
+                    // Attempt to clear messages if session ID was parseable before full error
+                    try { const temp = JSON.parse(savedSession); if(temp.sessionId) clearClientSideDataForSession(temp.sessionId); } catch {}
                 }
             }
             return false;
@@ -335,18 +439,37 @@
             checkMessagesBtn.classList.remove('hidden');
             deleteSessionBtn.classList.remove('hidden');
             copyEmailBtn.classList.remove('hidden');
-            if (providerSelect.options.length > 1) providerSelect.value = currentProviderName;
-            else setTimeout(() => { if (providerSelect.options.length > 1) providerSelect.value = currentProviderName; }, 500);
+            
+            // Update provider select if options are loaded
+            if (providerSelect.options.length > 1) {
+                providerSelect.value = currentProviderName;
+            } else {
+                 // If providers not loaded yet, try again after a short delay
+                 setTimeout(() => { if (providerSelect.options.length > 1) providerSelect.value = currentProviderName; }, 500);
+            }
+            // Show/hide rush mode based on provider
+            if (currentProviderName === 'tempmail.lol') {
+                rushModeContainer.classList.remove('hidden');
+                rushModeContainer.classList.add('flex'); // Use flex for items-center
+            } else {
+                rushModeContainer.classList.add('hidden');
+                rushModeContainer.classList.remove('flex');
+            }
         }
 
         async function generateEmail() {
             clearError();
-            if (currentSessionId) clearClientSideMessagesForSession(currentSessionId); // Clear old session's messages
+            if (currentSessionId) clearClientSideDataForSession(currentSessionId); // Clear old messages
             if (messageCheckInterval) clearInterval(messageCheckInterval);
 
             const selectedProvider = providerSelect.value;
             let urlParams = {};
-            if (selectedProvider && selectedProvider !== "random") urlParams.provider = selectedProvider;
+            if (selectedProvider && selectedProvider !== "random") {
+                urlParams.provider = selectedProvider;
+            }
+            if (selectedProvider === 'tempmail.lol') { // Only apply rush_mode for tempmail.lol
+                urlParams.rush_mode = rushModeToggle.checked;
+            }
 
             const result = await apiRequest('/gen', 'POST', null, urlParams, generateEmailBtn);
 
@@ -354,13 +477,13 @@
                 currentSessionId = result.data.api_session_id;
                 currentEmailAddress = result.data.email_address;
                 currentProviderName = result.data.provider;
-                currentExpiresAt = result.data.expires_at;
+                currentExpiresAt = result.data.expires_at; // Store expiration
                 
-                clientSideMessages = []; // Reset for new session
+                clientSideMessages = []; // Reset client-side messages for new session
                 updateSessionUI();
                 saveSessionToLocalStorage();
-                saveClientSideMessagesToLocalStorage(currentSessionId); // Save empty messages for new session
-                renderClientMessages(); // Will show placeholder
+                saveClientSideMessagesToLocalStorage(currentSessionId); // Save empty messages initially
+                renderClientMessages(); // Render (will show placeholder)
                 
                 if (messageCheckInterval) clearInterval(messageCheckInterval);
                 messageCheckInterval = setInterval(checkMessages, 15000);
@@ -376,33 +499,23 @@
             const result = await apiRequest(`/sessions/${currentSessionId}/messages`, 'GET', null, null, isManualClick ? checkMessagesBtn : null, isManualClick ? loadingMessages : null);
 
             if (result.success && result.data) {
-                const apiMessages = result.data; 
-
-                const messageMap = new Map(clientSideMessages.map(msg => [msg.id, msg]));
-                apiMessages.forEach(msg => {
-                    messageMap.set(msg.id, msg); 
-                });
-                clientSideMessages = Array.from(messageMap.values());
-                
+                clientSideMessages = result.data; // API is now the source of truth for the current list
                 renderClientMessages();
-                saveClientSideMessagesToLocalStorage(currentSessionId);
+                saveClientSideMessagesToLocalStorage(currentSessionId); // Save updated messages
 
-            } else if (result.status === 404) { // Session not found on server
+            } else if (result.status === 404) { // Session not found on server (e.g., expired)
                 if (messageCheckInterval) clearInterval(messageCheckInterval);
-                // Do not clear clientSideMessages here if we want to keep them despite server session loss
-                // However, the user experience might be confusing. For now, let's align with server state.
-                clearClientSideMessagesForSession(currentSessionId);
+                clearClientSideDataForSession(currentSessionId);
                 currentSessionId = null; currentEmailAddress = null; currentProviderName = null; currentExpiresAt = null;
                 emailInfoDiv.classList.add('hidden'); checkMessagesBtn.classList.add('hidden');
                 deleteSessionBtn.classList.add('hidden'); copyEmailBtn.classList.add('hidden');
                 clearSessionFromLocalStorage();
-                renderClientMessages(); // Will show placeholder
+                renderClientMessages(); // Clear displayed messages
                 if(isManualClick) displayError(result.error?.detail || 'Session not found on server. Local messages cleared.');
             } else if (isManualClick && !result.success) {
                 // Error already displayed by apiRequest
             }
         }
-
 
         function escapeHTML(str) {
             if (str === null || typeof str === 'undefined') return '';
@@ -420,6 +533,7 @@
             messageDiv.dataset.messageId = message.id;
 
             let fromDisplay = escapeHTML(message.from_address || 'Unknown Sender');
+            // Attempt to get a more descriptive 'from' if available in raw data
             if (message.raw && typeof message.raw.from === 'string' && message.raw.from.trim() !== '') {
                 fromDisplay = escapeHTML(message.raw.from);
             } else if (message.raw && typeof message.raw.mail_from === 'string' && message.raw.mail_from.trim() !== '') {
@@ -428,12 +542,22 @@
             const subjectText = escapeHTML(message.subject || '(No Subject)');
             const dateText = escapeHTML(message.date ? new Date(message.date).toLocaleString() : 'Unknown Date');
             const bodyText = escapeHTML(message.body || '(No text body)');
+            
+            const deleteBtnId = `delete-msg-${message.id.replace(/[^a-zA-Z0-9-_]/g, '')}`; // Sanitize ID for DOM
 
             messageDiv.innerHTML = `
-                <div class="border-b border-slate-200 pb-2 mb-2">
-                    <p class="text-xs sm:text-sm font-semibold text-sky-700">From: <span class="font-normal text-slate-600">${fromDisplay}</span></p>
-                    <p class="text-xs sm:text-sm font-semibold text-sky-700">Subject: <span class="font-normal text-slate-600">${subjectText}</span></p>
-                    <p class="text-xs text-slate-400 mt-1">Date: ${dateText}</p>
+                <div class="flex justify-between items-start border-b border-slate-200 pb-2 mb-2">
+                    <div>
+                        <p class="text-xs sm:text-sm font-semibold text-sky-700">From: <span class="font-normal text-slate-600">${fromDisplay}</span></p>
+                        <p class="text-xs sm:text-sm font-semibold text-sky-700">Subject: <span class="font-normal text-slate-600">${subjectText}</span></p>
+                        <p class="text-xs text-slate-400 mt-1">Date: ${dateText}</p>
+                    </div>
+                    <button id="${deleteBtnId}" data-message-id-to-delete="${message.id}" class="delete-message-btn text-red-500 hover:text-red-700 text-xs p-1 ml-2 focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                        </svg>
+                    </button>
                 </div>
                 <details class="group">
                     <summary class="text-xs sm:text-sm text-sky-600 hover:text-sky-700 cursor-pointer list-none group-open:mb-2">
@@ -455,7 +579,7 @@
                 pTag.className = 'font-medium text-slate-700 mb-1 text-sm';
                 pTag.textContent = 'HTML View:';
                 const iframe = document.createElement('iframe');
-                iframe.sandbox = 'allow-same-origin';
+                iframe.sandbox = 'allow-same-origin'; // Basic sandboxing for security
                 iframe.srcdoc = rawHtml;
                 iframeContainer.appendChild(pTag);
                 iframeContainer.appendChild(iframe);
@@ -463,6 +587,31 @@
                 if (detailsElement) detailsElement.appendChild(iframeContainer);
             }
             messagesContainer.appendChild(messageDiv);
+            
+            // Add event listener to the newly created delete button
+            const deleteButton = messageDiv.querySelector(`#${deleteBtnId}`);
+            if(deleteButton) {
+                deleteButton.addEventListener('click', handleDeleteMessage);
+            }
+        }
+        
+        async function handleDeleteMessage(event) {
+            const messageIdToDelete = event.currentTarget.dataset.messageIdToDelete;
+            if (!currentSessionId || !messageIdToDelete) return;
+
+            const result = await apiRequest(`/sessions/${currentSessionId}/messages/${messageIdToDelete}`, 'DELETE', null, null, event.currentTarget);
+
+            if (result.success) {
+                // Remove from client-side array and re-render
+                clientSideMessages = clientSideMessages.filter(msg => msg.id !== messageIdToDelete);
+                saveClientSideMessagesToLocalStorage(currentSessionId); // Update localStorage
+                renderClientMessages(); // Re-render the messages list
+                displaySuccess(`Message (ID: ${messageIdToDelete.substring(0,8)}...) deleted.`);
+            } else {
+                displayError(`Failed to delete message (ID: ${messageIdToDelete.substring(0,8)}...). It might have already been removed or an error occurred.`);
+                // Optionally, re-fetch messages to ensure client is in sync if server-side delete failed unexpectedly
+                // checkMessages(); 
+            }
         }
 
         async function deleteSession() {
@@ -472,30 +621,46 @@
             const result = await apiRequest(`/sessions/${currentSessionId}`, 'DELETE', null, null, deleteSessionBtn);
 
             if (result.success) {
-                clearClientSideMessagesForSession(currentSessionId); // Clears clientSideMessages array and local storage
+                clearClientSideDataForSession(currentSessionId); // Clear messages for this session
                 currentSessionId = null; currentEmailAddress = null; currentProviderName = null; currentExpiresAt = null;
                 emailInfoDiv.classList.add('hidden'); checkMessagesBtn.classList.add('hidden');
                 deleteSessionBtn.classList.add('hidden'); copyEmailBtn.classList.add('hidden');
                 clearSessionFromLocalStorage();
-                renderClientMessages(); // Will show placeholder
+                renderClientMessages(); // Clear displayed messages
                 emailAddressP.textContent = ''; sessionIdP.textContent = '';
                 emailProviderP.textContent = ''; emailExpiresP.textContent = 'Not specified';
                 displaySuccess('Session deleted successfully.');
+                // Hide rush mode if it was visible
+                rushModeContainer.classList.add('hidden');
+                rushModeContainer.classList.remove('flex');
             }
         }
 
         async function fetchInitialProviders() {
             try {
-                const response = await fetch(`${API_BASE_URL}/providers`);
-                if (!response.ok) { console.error('Failed to fetch providers'); return; }
-                const providers = await response.json();
-                providers.forEach(provider => {
-                    const option = document.createElement('option');
-                    option.value = provider; option.textContent = provider;
-                    providerSelect.appendChild(option);
-                });
+                // Use apiRequest for consistency and error handling
+                const result = await apiRequest('/providers'); 
+                if (result.success && result.data) {
+                    result.data.forEach(provider => {
+                        const option = document.createElement('option');
+                        option.value = provider; option.textContent = provider;
+                        providerSelect.appendChild(option);
+                    });
+                } else {
+                     console.error('Failed to fetch providers:', result.error?.detail || 'Unknown error');
+                }
             } catch (error) { console.error('Error fetching providers:', error); }
         }
+
+        providerSelect.addEventListener('change', (event) => {
+            if (event.target.value === 'tempmail.lol') {
+                rushModeContainer.classList.remove('hidden');
+                rushModeContainer.classList.add('flex');
+            } else {
+                rushModeContainer.classList.add('hidden');
+                rushModeContainer.classList.remove('flex');
+            }
+        });
 
         copyEmailBtn.addEventListener('click', () => {
             if (currentEmailAddress) {
@@ -510,10 +675,44 @@
         checkMessagesBtn.addEventListener('click', () => checkMessages(true));
         deleteSessionBtn.addEventListener('click', deleteSession);
 
+        // Sidebar Toggle Functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+        function toggleSidebar() {
+            const isOpen = sidebar.classList.contains('translate-x-0');
+            sidebar.classList.toggle('translate-x-0', !isOpen);
+            sidebar.classList.toggle('-translate-x-full', isOpen);
+            
+            // Hide/show the toggle button itself
+            sidebarToggle.classList.toggle('opacity-0', !isOpen); 
+            sidebarToggle.classList.toggle('pointer-events-none', !isOpen); 
+            
+            sidebarBackdrop.classList.toggle('opacity-0', isOpen);
+            sidebarBackdrop.classList.toggle('pointer-events-none', isOpen);
+            document.body.classList.toggle('overflow-hidden', !isOpen); // Prevent body scroll when sidebar is open
+        }
+
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        closeSidebarBtn.addEventListener('click', toggleSidebar);
+        sidebarBackdrop.addEventListener('click', toggleSidebar); // Close sidebar on backdrop click
+
+        // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             await fetchInitialProviders();
             if (!loadSessionFromLocalStorage()) {
+                // No active session found, show placeholder
                 showPlaceholderMessage(messagesContainer, 'Generate an email to get started.');
+            }
+            // Ensure rush mode visibility is correct on load if a session was loaded
+            if (currentProviderName === 'tempmail.lol') {
+                rushModeContainer.classList.remove('hidden');
+                rushModeContainer.classList.add('flex');
+            } else {
+                rushModeContainer.classList.add('hidden');
+                rushModeContainer.classList.remove('flex');
             }
         });
     </script>
