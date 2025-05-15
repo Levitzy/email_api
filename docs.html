@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temp Mail API Docs - Enhanced</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            overscroll-behavior-y: contain;
+        }
+        .api-endpoint { 
+            border-left-width: 4px; 
+            transition: box-shadow 0.3s ease-in-out;
+        }
+        .api-endpoint:hover {
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); 
+        }
+        .api-get { border-color: #3b82f6; } 
+        .api-post { border-color: #10b981; } 
+        .api-delete { border-color: #ef4444; } 
+        /* .api-patch { border-color: #f59e0b; }  Removed as config patch is gone */
+        
+        details summary { 
+            cursor: pointer; 
+            list-style: none; 
+            padding: 0.75rem 1rem; 
+            border-radius: 0.375rem; 
+            transition: background-color 0.2s ease-in-out;
+        }
+        details summary:hover {
+            background-color: #f9fafb; 
+        }
+        details summary::-webkit-details-marker { display: none; }
+        details summary::before { 
+            content: '▶'; 
+            margin-right: 0.75rem; 
+            display: inline-block; 
+            transition: transform 0.2s ease-in-out;
+            font-size: 0.8em;
+            color: #6b7280; 
+        }
+        details[open] summary::before { 
+            transform: rotate(90deg); 
+        }
+        details[open] summary {
+            background-color: #f3f4f6; 
+        }
+        
+        iframe { 
+            width: 100%; 
+            min-height: 250px; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 0.375rem; 
+        }
+        
+        input[type="text"], input[type="number"], select {
+            padding-top: 0.5rem;    
+            padding-bottom: 0.5rem; 
+            padding-left: 0.75rem;  
+            padding-right: 0.75rem; 
+        }
+        button, .button {
+            padding-top: 0.625rem;    
+            padding-bottom: 0.625rem; 
+            padding-left: 1.25rem;   
+            padding-right: 1.25rem;  
+            min-height: 44px; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; } 
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; } 
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; } 
+
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 p-3 sm:p-4 md:p-8">
+    <div class="container mx-auto max-w-5xl">
+        <header class="mb-8 md:mb-12 text-center">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-700">Temp Mail API Interface</h1>
+            <p class="text-slate-600 mt-2 sm:mt-3 text-base sm:text-lg">Interact with and test the Temp Mail API endpoints.</p>
+        </header>
+
+        <div id="globalInfo" class="mb-6 md:mb-8 p-4 sm:p-5 bg-sky-50 border border-sky-200 rounded-lg shadow-sm">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-2">Current Session:</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm sm:text-base">
+                <div><strong>Email:</strong> <span id="currentEmail" class="font-mono text-sky-600 break-all">N/A</span></div>
+                <div><strong>Session ID:</strong> <span id="currentSessionId" class="font-mono text-sky-600 break-all">N/A</span></div>
+                <div><strong>Provider:</strong> <span id="currentProvider" class="font-mono text-sky-600">N/A</span></div>
+            </div>
+        </div>
+        
+        <div id="globalErrorDisplay" class="my-4 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-700 rounded-md shadow hidden">
+            <h3 class="font-semibold text-lg">API Error:</h3>
+            <pre id="globalErrorMessage" class="whitespace-pre-wrap text-sm custom-scrollbar max-h-40 overflow-y-auto"></pre>
+        </div>
+
+        <div class="space-y-6 md:space-y-8">
+
+            <section id="api-providers" class="api-endpoint api-get bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <details>
+                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2 sm:mr-3">GET</span>
+                            <span>/providers</span>
+                        </div>
+                        <span class="text-sm sm:text-lg text-slate-500">List Available Providers</span>
+                    </summary>
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <button id="fetchProvidersBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Fetch Providers</button>
+                        <div class="mt-4 p-3 bg-slate-50 rounded-md max-h-60 overflow-y-auto custom-scrollbar">
+                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
+                            <pre id="providersResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <section id="api-gen" class="api-endpoint api-post bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <details>
+                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2 sm:mr-3">POST</span>
+                            <span>/gen</span>
+                        </div>
+                        <span class="text-sm sm:text-lg text-slate-500">Generate Email (Quick)</span>
+                    </summary>
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="genProvider" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Provider (optional):</label>
+                                <input type="text" id="genProvider" name="genProvider" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="e.g., mail.tm, random">
+                            </div>
+                            <div>
+                                <label for="genRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (tempmail.lol):</label>
+                                <select id="genRushMode" name="genRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
+                                    <option value="false">False</option>
+                                    <option value="true">True</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="generateEmailGenBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Generate Email</button>
+                        <div class="mt-4 p-3 bg-slate-50 rounded-md max-h-60 overflow-y-auto custom-scrollbar">
+                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
+                            <pre id="genResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                        </div>
+                    </div>
+                </details>
+            </section>
+            
+            <section id="api-sessions-post" class="api-endpoint api-post bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <details>
+                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2 sm:mr-3">POST</span>
+                            <span>/sessions</span>
+                        </div>
+                        <span class="text-sm sm:text-lg text-slate-500">Create Session (Specific)</span>
+                    </summary>
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="sessionProviderName" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Provider Name (required):</label>
+                                <input type="text" id="sessionProviderName" name="sessionProviderName" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="e.g., mail.tm">
+                            </div>
+                            <div>
+                                <label for="sessionRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (tempmail.lol):</label>
+                                <select id="sessionRushMode" name="sessionRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
+                                    <option value="false">False</option>
+                                    <option value="true">True</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="createSessionBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Create Session</button>
+                        <div class="mt-4 p-3 bg-slate-50 rounded-md max-h-60 overflow-y-auto custom-scrollbar">
+                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
+                            <pre id="createSessionResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <section id="api-messages" class="api-endpoint api-get bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <details>
+                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
+                         <div class="flex items-center">
+                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2 sm:mr-3">GET</span>
+                            <span>/sessions/.../messages</span>
+                        </div>
+                        <span class="text-sm sm:text-lg text-slate-500">Fetch Messages</span>
+                    </summary>
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="mb-4">
+                            <label for="messagesSessionId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">API Session ID (current if blank):</label>
+                            <input type="text" id="messagesSessionId" name="messagesSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="Uses current session ID">
+                        </div>
+                        <button id="fetchMessagesBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Fetch Messages</button>
+                        <div class="mt-4 p-3 bg-slate-50 rounded-md">
+                            <h4 class="font-medium text-slate-600 mb-2 text-sm">Messages:</h4>
+                            <div id="messagesResponse" class="text-xs sm:text-sm space-y-3 max-h-96 overflow-y-auto custom-scrollbar p-1"></div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <section id="api-delete-session" class="api-endpoint api-delete bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <details>
+                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="font-mono text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-md mr-2 sm:mr-3">DELETE</span>
+                            <span>/sessions/...</span>
+                        </div>
+                        <span class="text-sm sm:text-lg text-slate-500">Delete Session</span>
+                    </summary>
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="mb-4">
+                            <label for="deleteSessionId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">API Session ID (current if blank):</label>
+                            <input type="text" id="deleteSessionId" name="deleteSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="Uses current session ID">
+                        </div>
+                        <button id="deleteSessionDocsBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Delete Session</button>
+                        <div class="mt-4 p-3 bg-slate-50 rounded-md">
+                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
+                            <pre id="deleteSessionResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <section id="api-history" class="api-endpoint api-get bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <details>
+                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
+                        <div class="flex items-center">
+                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2 sm:mr-3">GET</span>
+                            <span>/history</span>
+                        </div>
+                        <span class="text-sm sm:text-lg text-slate-500">View Message History</span>
+                    </summary>
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="historyPage" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Page:</label>
+                                <input type="number" id="historyPage" name="historyPage" value="1" min="1" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
+                            </div>
+                            <div>
+                                <label for="historyPageSize" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Page Size:</label>
+                                <input type="number" id="historyPageSize" name="historyPageSize" value="10" min="1" max="100" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
+                            </div>
+                        </div>
+                        <button id="fetchHistoryBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Fetch History</button>
+                        <div class="mt-4 p-3 bg-slate-50 rounded-md">
+                            <h4 class="font-medium text-slate-600 mb-2 text-sm">History:</h4>
+                            <div id="historyResponse" class="text-xs sm:text-sm space-y-3 max-h-96 overflow-y-auto custom-scrollbar p-1"></div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+        </div>
+        <footer class="mt-12 py-6 text-center text-slate-500 text-sm">
+            Temp Mail API Interface &copy; 2024-2025
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE_URL = ''; 
+        let G_CURRENT_SESSION_ID = null;
+        let G_CURRENT_EMAIL = null;
+        let G_CURRENT_PROVIDER = null;
+        let G_FETCH_MESSAGES_SESSION_ID_TRACKER = null; 
+        let G_DISPLAYED_MESSAGE_IDS = new Set();
+
+
+        const globalErrorDisplay = document.getElementById('globalErrorDisplay');
+        const globalErrorMessage = document.getElementById('globalErrorMessage');
+
+        function displayGlobalError(message, data = null) {
+            let fullMessage = message;
+            if (data && data.detail) {
+                fullMessage += `\nDetails: ${typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail, null, 2)}`;
+            } else if (data && typeof data === 'object') {
+                 fullMessage += `\n${JSON.stringify(data, null, 2)}`;
+            } else if (data) {
+                 fullMessage += `\n${data}`;
+            }
+            globalErrorMessage.textContent = fullMessage;
+            globalErrorDisplay.classList.remove('hidden');
+            console.error("Global Error:", fullMessage, data);
+        }
+
+        function clearGlobalError() {
+            globalErrorDisplay.classList.add('hidden');
+            globalErrorMessage.textContent = '';
+        }
+        
+        function updateGlobalSessionInfo(sessionId, email, provider) {
+            G_CURRENT_SESSION_ID = sessionId;
+            G_CURRENT_EMAIL = email;
+            G_CURRENT_PROVIDER = provider;
+            document.getElementById('currentSessionId').textContent = sessionId || 'N/A';
+            document.getElementById('currentEmail').textContent = email || 'N/A';
+            document.getElementById('currentProvider').textContent = provider || 'N/A';
+            
+            const messagesSessionIdInput = document.getElementById('messagesSessionId');
+            const deleteSessionIdInput = document.getElementById('deleteSessionId');
+
+            if (sessionId) {
+                messagesSessionIdInput.placeholder = `Current: ${sessionId.substring(0,10)}...`;
+                deleteSessionIdInput.placeholder = `Current: ${sessionId.substring(0,10)}...`;
+            } else {
+                 messagesSessionIdInput.placeholder = 'Enter Session ID';
+                 deleteSessionIdInput.placeholder = 'Enter Session ID';
+            }
+            if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionId) {
+                document.getElementById('messagesResponse').innerHTML = ''; 
+                G_DISPLAYED_MESSAGE_IDS.clear();
+            }
+            G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionId;
+        }
+        
+        function escapeForSrcdoc(str) {
+            if (typeof str !== 'string') return '';
+            // Escape backticks and `${` sequences for JavaScript template literal context
+            return str.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+        }
+
+
+        async function apiRequest(endpoint, method = 'GET', body = null, params = null, buttonElement = null) {
+            clearGlobalError();
+            const originalButtonText = buttonElement ? buttonElement.innerHTML : null;
+            if (buttonElement) {
+                buttonElement.disabled = true;
+                buttonElement.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Processing...`;
+            }
+
+            const url = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin);
+            if (params) {
+                Object.keys(params).forEach(key => {
+                    if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+                         url.searchParams.append(key, params[key]);
+                    }
+                });
+            }
+
+            const options = { method, headers: {} };
+            if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+
+            try {
+                const response = await fetch(url, options);
+                if (buttonElement && originalButtonText) buttonElement.innerHTML = originalButtonText; 
+                
+                if (response.status === 204) { 
+                     if (buttonElement) buttonElement.disabled = false;
+                    return { success: true, status: 204, data: null };
+                }
+
+                const responseData = await response.json().catch(e => {
+                    console.warn("Response was not JSON", e);
+                    if (response.ok) return { detail: "Response was not JSON, but status was OK."}; 
+                    return { detail: `Server returned non-JSON response with status ${response.status}` }; 
+                });
+
+                if (!response.ok) {
+                    throw { status: response.status, data: responseData };
+                }
+                if (buttonElement) buttonElement.disabled = false;
+                return { success: true, status: response.status, data: responseData };
+            } catch (error) {
+                console.error(`API Request Error (${method} ${endpoint}):`, error);
+                const errorMessageText = error.data ? (error.data.detail || JSON.stringify(error.data)) : error.message || 'Network error or invalid/unexpected response';
+                displayGlobalError(`Error ${error.status || 'Network'}: ${errorMessageText}`, error.data);
+                if (buttonElement && originalButtonText) {
+                     buttonElement.innerHTML = originalButtonText;
+                     buttonElement.disabled = false;
+                }
+                return { success: false, status: error.status, error: error.data || { detail: errorMessageText } };
+            }
+        }
+        
+        function displayMessageInDocs(containerId, messageData, append = false) {
+            const container = document.getElementById(containerId);
+            if (!append) {
+                container.innerHTML = ''; 
+                G_DISPLAYED_MESSAGE_IDS.clear();
+            }
+            
+            if (!messageData || messageData.length === 0) {
+                if (container.querySelectorAll('.message-item').length === 0) { // Check if any actual messages exist
+                    container.innerHTML = '<p class="text-slate-500 p-2 placeholder-message">No messages found.</p>';
+                }
+                return;
+            }
+
+            const placeholder = container.querySelector('p.placeholder-message');
+            if (placeholder) placeholder.remove();
+
+            messageData.forEach(msg => {
+                if (G_DISPLAYED_MESSAGE_IDS.has(msg.id) && append) return; 
+
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'p-3 border border-slate-200 rounded-md bg-white shadow-sm hover:shadow-md transition-shadow message-item';
+                
+                let fromDisplay = msg.from_address || 'Unknown Sender';
+                if (msg.raw && typeof msg.raw.from === 'string' && msg.raw.from.trim() !== '') {
+                    fromDisplay = msg.raw.from;
+                } else if (msg.raw && typeof msg.raw.mail_from === 'string' && msg.raw.mail_from.trim() !== '') { // GuerrillaMail specific
+                    fromDisplay = msg.raw.mail_from;
+                }
+
+                let subjectText = msg.subject || '(No Subject)';
+                let dateText = msg.date ? new Date(msg.date).toLocaleString() : 'Unknown Date';
+                let bodyText = msg.body || '(No text body)';
+                let htmlContent = msg.html ? escapeForSrcdoc(Array.isArray(msg.html) ? msg.html.join('') : String(msg.html)) : '';
+                
+                msgDiv.innerHTML = `
+                    <p class="text-xs text-slate-500 mb-1">ID: ${msg.id}</p>
+                    <p class="text-sm"><strong>From:</strong> <span class="text-slate-700">${fromDisplay}</span></p>
+                    <p class="text-sm"><strong>Subject:</strong> <span class="text-slate-700">${subjectText}</span></p>
+                    <p class="text-xs text-slate-500 mt-1"><strong>Date:</strong> ${dateText}</p>
+                    <details class="mt-2 text-sm group">
+                        <summary class="text-sky-600 hover:text-sky-700 cursor-pointer list-none group-open:mb-1">
+                            <span class="group-open:hidden">Show Body/HTML ▼</span>
+                            <span class="hidden group-open:inline">Hide Body/HTML ▲</span>
+                        </summary>
+                        <div class="mt-1 p-2 bg-slate-50 rounded border border-slate-200">
+                            <p class="font-semibold text-slate-700 text-xs">Text Body:</p>
+                            <pre class="whitespace-pre-wrap text-xs custom-scrollbar max-h-32 overflow-y-auto">${bodyText}</pre>
+                            ${htmlContent ? `
+                                <p class="font-semibold mt-2 text-slate-700 text-xs">HTML Body:</p>
+                                <iframe srcdoc="${htmlContent}" sandbox="allow-same-origin" class="mt-1"></iframe>
+                            ` : ''}
+                        </div>
+                    </details>
+                `;
+                container.appendChild(msgDiv);
+                if (append) G_DISPLAYED_MESSAGE_IDS.add(msg.id);
+            });
+        }
+
+        document.getElementById('fetchProvidersBtn').addEventListener('click', async (e) => {
+            const result = await apiRequest('/providers', 'GET', null, null, e.target);
+            document.getElementById('providersResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error fetching providers.';
+        });
+
+        document.getElementById('generateEmailGenBtn').addEventListener('click', async (e) => {
+            const provider = document.getElementById('genProvider').value || null; // Will be 'random' or specific provider, or null for random
+            const rushMode = document.getElementById('genRushMode').value === 'true';
+            const params = {};
+            if (provider && provider.toLowerCase() !== 'random') { // Only add provider if it's specific
+                params.provider = provider;
+            }
+            // Rush mode is only relevant if tempmail.lol is chosen (either specifically or randomly by backend)
+            // The backend will handle rush_mode if tempmail.lol is the active provider.
+            // For client-side, we can pass it if tempmail.lol is explicitly selected or if no provider is specified (as tempmail.lol might be picked)
+            if ((provider && provider.toLowerCase() === 'tempmail.lol') || !provider) {
+                 params.rush_mode = rushMode;
+            }
+
+
+            const result = await apiRequest('/gen', 'POST', null, params, e.target);
+            document.getElementById('genResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error generating email.';
+            if (result.success && result.data) {
+                updateGlobalSessionInfo(result.data.api_session_id, result.data.email_address, result.data.provider);
+            }
+        });
+        
+        document.getElementById('createSessionBtn').addEventListener('click', async (e) => {
+            const providerName = document.getElementById('sessionProviderName').value;
+            const rushMode = document.getElementById('sessionRushMode').value === 'true';
+            if (!providerName) {
+                displayGlobalError("Provider Name is required for creating a specific session.");
+                return;
+            }
+            const params = { provider_name: providerName };
+             if (providerName.toLowerCase() === 'tempmail.lol') params.rush_mode = rushMode;
+
+            const result = await apiRequest('/sessions', 'POST', null, params, e.target);
+            document.getElementById('createSessionResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error creating session.';
+            if (result.success && result.data) {
+                 updateGlobalSessionInfo(result.data.api_session_id, result.data.email_address, result.data.provider);
+            }
+        });
+
+        document.getElementById('fetchMessagesBtn').addEventListener('click', async (e) => {
+            const sessionIdInput = document.getElementById('messagesSessionId').value;
+            const sessionIdToUse = sessionIdInput || G_CURRENT_SESSION_ID;
+
+            if (!sessionIdToUse) {
+                displayGlobalError("No session ID specified or active. Please generate an email first.");
+                return;
+            }
+            
+            // If the session ID being fetched is different from the one we were tracking, clear old messages.
+            if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionIdToUse) {
+                document.getElementById('messagesResponse').innerHTML = ''; // Clear visual
+                G_DISPLAYED_MESSAGE_IDS.clear(); // Clear tracked IDs
+                G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse; // Update tracker
+            }
+
+
+            const result = await apiRequest(`/sessions/${sessionIdToUse}/messages`, 'GET', null, null, e.target);
+            if (result.success) {
+                displayMessageInDocs('messagesResponse', result.data, true); // Always append for fetch button
+            } else {
+                 const messagesResponseDiv = document.getElementById('messagesResponse');
+                 if(messagesResponseDiv.querySelectorAll('.message-item').length === 0) { // Only show error if no messages are already there
+                    messagesResponseDiv.innerHTML = '<p class="text-red-600 p-2 placeholder-message">Error fetching messages.</p>';
+                 }
+            }
+        });
+
+        document.getElementById('deleteSessionDocsBtn').addEventListener('click', async (e) => {
+            const sessionIdInput = document.getElementById('deleteSessionId').value;
+            const sessionIdToUse = sessionIdInput || G_CURRENT_SESSION_ID;
+            if (!sessionIdToUse) {
+                displayGlobalError("No session ID specified or active to delete.");
+                return;
+            }
+            const result = await apiRequest(`/sessions/${sessionIdToUse}`, 'DELETE', null, null, e.target);
+            document.getElementById('deleteSessionResponse').textContent = result.success ? `Session ${sessionIdToUse.substring(0,15)}... deleted (Status: ${result.status})` : `Failed to delete (Status: ${result.status || 'N/A'})`;
+            if (result.success && sessionIdToUse === G_CURRENT_SESSION_ID) {
+                updateGlobalSessionInfo(null, null, null); // This will also clear G_FETCH_MESSAGES_SESSION_ID_TRACKER
+                 document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">Current session deleted.</p>';
+                 G_DISPLAYED_MESSAGE_IDS.clear();
+            }
+        });
+
+        document.getElementById('fetchHistoryBtn').addEventListener('click', async (e) => {
+            const page = document.getElementById('historyPage').value;
+            const pageSize = document.getElementById('historyPageSize').value;
+            const result = await apiRequest('/history', 'GET', null, { page, page_size: pageSize }, e.target);
+             if (result.success) {
+                // History items might not have all fields like live messages, adapt if needed.
+                // The current displayMessageInDocs should handle missing fields gracefully.
+                displayMessageInDocs('historyResponse', result.data.map(item => item.message), false); 
+            } else {
+                 document.getElementById('historyResponse').innerHTML = '<p class="text-red-600 p-2 placeholder-message">Error fetching history.</p>';
+            }
+        });
+        
+        
+        (async () => {
+            const btn = document.getElementById('fetchProvidersBtn');
+            const result = await apiRequest('/providers', 'GET', null, null, btn); 
+            document.getElementById('providersResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error fetching providers on load.';
+        })();
+
+    </script>
+</body>
+</html>
