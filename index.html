@@ -7,45 +7,47 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            overscroll-behavior-y: contain; 
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior-y: contain;
         }
         .message-bubble {
-            max-width: 100%; 
+            max-width: 100%;
             word-wrap: break-word;
         }
         .message-body-html iframe {
             width: 100%;
-            min-height: 250px; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 0.375rem; 
+            min-height: 250px;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
         }
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9; 
+            background: #f1f5f9;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #64748b; 
+            background: #64748b;
             border-radius: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #475569; 
+            background: #475569;
         }
-        button, .button, select {
-            padding-top: 0.75rem;    
-            padding-bottom: 0.75rem; 
-            padding-left: 1.5rem;   
-            padding-right: 1.5rem;  
-            min-height: 44px; 
+        button, .button, select, input[type="text"], input[type="number"] {
+            padding-top: 0.625rem;
+            padding-bottom: 0.625rem;
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+            min-height: 44px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            border-radius: 0.375rem;
+            border: 1px solid #d1d5db;
         }
         select {
-            justify-content: flex-start; 
+            justify-content: flex-start;
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-position: right 0.5rem center;
             background-repeat: no-repeat;
@@ -53,11 +55,11 @@
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            padding-right: 2.5rem; 
+            padding-right: 2.5rem;
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center justify-center p-3 sm:p-4 md:p-6">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-3 sm:p-4 md:p-6">
 
     <div class="w-full max-w-2xl bg-white shadow-2xl rounded-xl p-5 sm:p-6 md:p-8">
         <header class="mb-6 md:mb-8 text-center">
@@ -65,53 +67,60 @@
             <p class="text-slate-600 mt-2 text-sm sm:text-base">Your Instant Disposable Email Address</p>
         </header>
 
-        <div class="mb-4">
-            <label for="providerSelect" class="block text-sm font-medium text-slate-700 mb-1">Select Provider:</label>
-            <select id="providerSelect" class="w-full bg-white border border-slate-300 text-slate-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition duration-150 ease-in-out">
-                <option value="random">Random (Recommended)</option>
-            </select>
-        </div>
-
-        <div class="mb-6 space-y-3 sm:space-y-4">
-            <button id="generateEmailBtn" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75">
-                Generate New Email
-            </button>
-            <button id="deleteSessionBtn" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out hidden focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
-                Delete Email Session
-            </button>
-        </div>
-
-        <div id="emailInfo" class="mb-6 p-4 bg-slate-50 rounded-lg shadow-inner hidden">
-            <h2 class="text-lg sm:text-xl font-semibold text-slate-700 mb-2">Your Temporary Email:</h2>
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                <p class="text-md sm:text-lg text-sky-600 break-all font-medium" id="emailAddress"></p>
-                <button id="copyEmailBtn" class="mt-2 sm:mt-0 sm:ml-3 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs px-3 py-1 rounded-md transition-colors hidden">Copy</button>
+        <div id="sessionContent" class="active">
+            <div class="mb-4">
+                <label for="providerSelect" class="block text-sm font-medium text-slate-700 mb-1">Select Provider:</label>
+                <select id="providerSelect" class="w-full bg-white border-slate-300 text-slate-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition duration-150 ease-in-out">
+                    <option value="random">Random (Recommended)</option>
+                </select>
             </div>
-            <p class="text-xs sm:text-sm text-slate-500 mt-2">Session ID: <span id="sessionId" class="font-mono bg-slate-200 px-1 rounded"></span></p>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Provider: <span id="emailProvider" class="font-mono"></span></p>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Expires: <span id="emailExpires" class="font-mono">Not specified</span></p>
-        </div>
-        
-        <div id="controlsAndStatusContainer" class="mb-6 text-center">
-            <button id="checkMessagesBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out hidden focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75">
-                Check Messages
-            </button>
-            <div id="loadingMessages" class="text-center my-4 hidden">
-                <div class="flex items-center justify-center text-slate-600">
-                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500 mr-3"></div>
-                    Loading messages...
+
+            <div class="mb-6 space-y-3 sm:space-y-4">
+                <button id="generateEmailBtn" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75">
+                    Generate New Email
+                </button>
+                <button id="deleteSessionBtn" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out hidden focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
+                    Delete Email Session
+                </button>
+            </div>
+
+            <div id="emailInfo" class="mb-6 p-4 bg-slate-50 rounded-lg shadow-inner hidden">
+                <h2 class="text-lg sm:text-xl font-semibold text-slate-700 mb-2">Your Temporary Email:</h2>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-md sm:text-lg text-sky-600 break-all font-medium" id="emailAddress"></p>
+                    <button id="copyEmailBtn" class="mt-2 sm:mt-0 sm:ml-3 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs px-3 py-1 rounded-md transition-colors hidden">Copy</button>
+                </div>
+                <p class="text-xs sm:text-sm text-slate-500 mt-2">Session ID: <span id="sessionId" class="font-mono bg-slate-200 px-1 rounded"></span></p>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">Provider: <span id="emailProvider" class="font-mono"></span></p>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">Expires: <span id="emailExpires" class="font-mono">Not specified</span></p>
+            </div>
+
+            <div id="controlsAndStatusContainer" class="mb-6 text-center">
+                <button id="checkMessagesBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out hidden focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75">
+                    Check Messages
+                </button>
+                <div id="loadingMessages" class="text-center my-4 hidden">
+                    <div class="flex items-center justify-center text-slate-600">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500 mr-3"></div>
+                        Loading messages...
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div id="messagesContainer" class="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto custom-scrollbar p-1">
+            <div id="messagesContainer" class="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto custom-scrollbar p-1">
+            </div>
         </div>
 
         <div id="errorDisplay" class="mt-6 p-4 bg-red-100 text-red-700 rounded-lg shadow-md hidden">
             <h3 class="font-semibold text-lg">Error:</h3>
             <p id="errorMessage" class="text-sm"></p>
         </div>
-        
+
+        <div id="successDisplay" class="mt-6 p-4 bg-green-100 text-green-700 rounded-lg shadow-md hidden">
+             <h3 class="font-semibold text-lg">Success:</h3>
+            <p id="successMessage" class="text-sm"></p>
+        </div>
+
         <div id="successCopy" class="fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0">
             Email copied to clipboard!
         </div>
@@ -130,36 +139,69 @@
         const messagesContainer = document.getElementById('messagesContainer');
         const errorDisplay = document.getElementById('errorDisplay');
         const errorMessageP = document.getElementById('errorMessage');
+        const successDisplay = document.getElementById('successDisplay');
+        const successMessageP = document.getElementById('successMessage');
         const loadingMessages = document.getElementById('loadingMessages');
         const successCopyDiv = document.getElementById('successCopy');
         const providerSelect = document.getElementById('providerSelect');
 
-        const API_BASE_URL = ''; 
+        const API_BASE_URL = '';
         let currentSessionId = null;
         let currentEmailAddress = null;
         let currentProviderName = null;
         let currentExpiresAt = null;
         let messageCheckInterval = null;
-        let displayedMessageIds = new Set();
+        
+        let clientSideMessages = []; // Holds all messages for the current session, persisted in local storage
 
         const LS_SESSION_KEY = 'biarMailSession';
+        const LS_MESSAGES_PREFIX = 'biarMailMessages_';
 
-        async function fetchProviders() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/providers`);
-                if (!response.ok) {
-                    console.error('Failed to fetch providers');
-                    return;
-                }
-                const providers = await response.json();
-                providers.forEach(provider => {
-                    const option = document.createElement('option');
-                    option.value = provider;
-                    option.textContent = provider;
-                    providerSelect.appendChild(option);
+        async function apiRequest(endpoint, method = 'GET', body = null, params = null, buttonEl = null, loadingEl = null) {
+            clearError();
+            clearSuccess();
+            let originalButtonText = null;
+            if (buttonEl) {
+                originalButtonText = buttonEl.innerHTML;
+                buttonEl.disabled = true;
+                buttonEl.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div> Processing...`;
+            }
+            if (loadingEl) loadingEl.classList.remove('hidden');
+
+            const url = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin);
+            if (params) {
+                Object.keys(params).forEach(key => {
+                    if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+                         url.searchParams.append(key, params[key]);
+                    }
                 });
+            }
+            const options = { method, headers: {} };
+            if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+
+            try {
+                const response = await fetch(url, options);
+                if (response.status === 204) {
+                    return { success: true, status: 204, data: null };
+                }
+                const responseData = await response.json().catch(e => ({ detail: `Server returned non-JSON response with status ${response.status}` }));
+                if (!response.ok) {
+                    throw { status: response.status, data: responseData };
+                }
+                return { success: true, status: response.status, data: responseData };
             } catch (error) {
-                console.error('Error fetching providers:', error);
+                const errorMsg = error.data?.detail || error.message || 'Network error or invalid response';
+                displayError(`Error ${error.status || 'Network'}: ${errorMsg}`);
+                return { success: false, status: error.status, error: error.data || { detail: errorMsg } };
+            } finally {
+                if (buttonEl && originalButtonText) {
+                    buttonEl.innerHTML = originalButtonText;
+                    buttonEl.disabled = false;
+                }
+                if (loadingEl) loadingEl.classList.add('hidden');
             }
         }
 
@@ -168,33 +210,34 @@
             errorDisplay.classList.remove('hidden');
             console.error(message);
         }
-
         function clearError() {
             errorDisplay.classList.add('hidden');
             errorMessageP.textContent = '';
         }
-        
-        function clearMessagesDisplay() {
-            messagesContainer.innerHTML = '';
-            displayedMessageIds.clear();
-            const placeholder = messagesContainer.querySelector('p.placeholder-message');
-            if (placeholder) placeholder.remove();
+        function displaySuccess(message) {
+            successMessageP.textContent = message;
+            successDisplay.classList.remove('hidden');
+        }
+        function clearSuccess() {
+            successDisplay.classList.add('hidden');
+            successMessageP.textContent = '';
         }
 
-        function showPlaceholderMessage(text) {
-            // Only show placeholder if no actual messages are present
-            if (messagesContainer.querySelectorAll('.message-item').length === 0) {
-                // Remove any existing placeholder first
-                const existingPlaceholder = messagesContainer.querySelector('p.placeholder-message');
+        function clearMessagesDisplayOnly() {
+            messagesContainer.innerHTML = '';
+        }
+
+        function showPlaceholderMessage(container, text) {
+            if (container.querySelectorAll('.message-item').length === 0) {
+                const existingPlaceholder = container.querySelector('p.placeholder-message');
                 if (existingPlaceholder) existingPlaceholder.remove();
-                
                 const placeholder = document.createElement('p');
                 placeholder.className = 'text-center text-slate-500 py-4 placeholder-message';
                 placeholder.textContent = text;
-                messagesContainer.appendChild(placeholder);
+                container.appendChild(placeholder);
             }
         }
-        
+
         function saveSessionToLocalStorage() {
             if (currentSessionId && currentEmailAddress && currentProviderName) {
                 const sessionData = {
@@ -207,59 +250,73 @@
             }
         }
 
+        function saveClientSideMessagesToLocalStorage(sessionId) {
+            if (sessionId && Array.isArray(clientSideMessages)) {
+                localStorage.setItem(`${LS_MESSAGES_PREFIX}${sessionId}`, JSON.stringify(clientSideMessages));
+            }
+        }
+
+        function loadClientSideMessagesFromLocalStorage(sessionId) {
+            if (!sessionId) return [];
+            const storedMessagesStr = localStorage.getItem(`${LS_MESSAGES_PREFIX}${sessionId}`);
+            if (storedMessagesStr) {
+                try { return JSON.parse(storedMessagesStr); }
+                catch (e) {
+                    console.error("Error parsing stored client messages:", e);
+                    localStorage.removeItem(`${LS_MESSAGES_PREFIX}${sessionId}`); return [];
+                }
+            }
+            return [];
+        }
+
+        function clearClientSideMessagesForSession(sessionId) {
+            if (sessionId) localStorage.removeItem(`${LS_MESSAGES_PREFIX}${sessionId}`);
+            clientSideMessages = [];
+            clearMessagesDisplayOnly();
+        }
+        
+        function renderClientMessages() {
+            clearMessagesDisplayOnly();
+            if (clientSideMessages.length === 0) {
+                showPlaceholderMessage(messagesContainer, 'No messages in inbox.');
+            } else {
+                // Sort messages by date, most recent first, if date is available and parsable
+                clientSideMessages.sort((a, b) => {
+                    const dateA = a.date ? new Date(a.date).getTime() : 0;
+                    const dateB = b.date ? new Date(b.date).getTime() : 0;
+                    return dateB - dateA; // Descending
+                });
+                clientSideMessages.forEach(msg => renderMessageDOM(msg));
+            }
+        }
+
+
         function loadSessionFromLocalStorage() {
             const savedSession = localStorage.getItem(LS_SESSION_KEY);
             if (savedSession) {
                 try {
                     const sessionData = JSON.parse(savedSession);
                     if (sessionData.sessionId && sessionData.emailAddress && sessionData.provider) {
-                        if (sessionData.expiresAt) {
-                            const expiryDate = new Date(sessionData.expiresAt);
-                            if (expiryDate < new Date()) {
-                                console.log("Loaded session from localStorage appears to be expired. Clearing.");
-                                clearSessionFromLocalStorage(); // Clear expired session
-                                return false; 
-                            }
+                        if (sessionData.expiresAt && new Date(sessionData.expiresAt) < new Date()) {
+                            clearSessionFromLocalStorage(); clearClientSideMessagesForSession(sessionData.sessionId); return false;
                         }
-                        
                         currentSessionId = sessionData.sessionId;
                         currentEmailAddress = sessionData.emailAddress;
                         currentProviderName = sessionData.provider;
                         currentExpiresAt = sessionData.expiresAt;
-
-                        emailAddressP.textContent = currentEmailAddress;
-                        sessionIdP.textContent = currentSessionId;
-                        emailProviderP.textContent = currentProviderName;
-                        emailExpiresP.textContent = currentExpiresAt ? new Date(currentExpiresAt).toLocaleString() : 'Not specified';
+                        updateSessionUI();
                         
-                        emailInfoDiv.classList.remove('hidden');
-                        checkMessagesBtn.classList.remove('hidden');
-                        deleteSessionBtn.classList.remove('hidden');
-                        copyEmailBtn.classList.remove('hidden');
+                        clientSideMessages = loadClientSideMessagesFromLocalStorage(currentSessionId);
+                        renderClientMessages(); // Render what's in local storage first
                         
-                        // Ensure providerSelect has options before setting value
-                        if (providerSelect.options.length > 1) { // Assuming "Random" is always first
-                           providerSelect.value = currentProviderName;
-                        } else {
-                            // If providers not loaded yet, try again after a short delay or rely on fetchProviders finishing
-                            setTimeout(() => {
-                                if (providerSelect.options.length > 1) providerSelect.value = currentProviderName;
-                            }, 500);
-                        }
-                        
-                        clearMessagesDisplay(); // Clear any old messages and reset displayedMessageIds
-                        showPlaceholderMessage('Restored session. Checking messages...');
                         if (messageCheckInterval) clearInterval(messageCheckInterval);
                         messageCheckInterval = setInterval(checkMessages, 15000);
-                        checkMessages(true); // Auto-fetch on load for restored session
+                        checkMessages(true); // Then check server for updates
                         return true;
-                    } else {
-                        console.warn("Invalid session data in localStorage. Clearing.");
-                        clearSessionFromLocalStorage();
-                    }
+                    } else { clearSessionFromLocalStorage(); if(sessionData.sessionId) clearClientSideMessagesForSession(sessionData.sessionId); }
                 } catch (e) {
-                    console.error("Error parsing session data from localStorage:", e);
-                    clearSessionFromLocalStorage();
+                    console.error("Error parsing session data:", e); clearSessionFromLocalStorage();
+                    try { const temp = JSON.parse(savedSession); if(temp.sessionId) clearClientSideMessagesForSession(temp.sessionId); } catch {}
                 }
             }
             return false;
@@ -269,170 +326,108 @@
             localStorage.removeItem(LS_SESSION_KEY);
         }
 
+        function updateSessionUI() {
+            emailAddressP.textContent = currentEmailAddress;
+            sessionIdP.textContent = currentSessionId;
+            emailProviderP.textContent = currentProviderName;
+            emailExpiresP.textContent = currentExpiresAt ? new Date(currentExpiresAt).toLocaleString() : 'Not specified';
+            emailInfoDiv.classList.remove('hidden');
+            checkMessagesBtn.classList.remove('hidden');
+            deleteSessionBtn.classList.remove('hidden');
+            copyEmailBtn.classList.remove('hidden');
+            if (providerSelect.options.length > 1) providerSelect.value = currentProviderName;
+            else setTimeout(() => { if (providerSelect.options.length > 1) providerSelect.value = currentProviderName; }, 500);
+        }
 
         async function generateEmail() {
             clearError();
-            clearMessagesDisplay(); 
+            if (currentSessionId) clearClientSideMessagesForSession(currentSessionId); // Clear old session's messages
             if (messageCheckInterval) clearInterval(messageCheckInterval);
-            generateEmailBtn.disabled = true;
-            generateEmailBtn.innerHTML = `<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div> Generating...`;
-            
+
             const selectedProvider = providerSelect.value;
-            let url = `${API_BASE_URL}/gen`;
-            const params = new URLSearchParams();
+            let urlParams = {};
+            if (selectedProvider && selectedProvider !== "random") urlParams.provider = selectedProvider;
 
-            if (selectedProvider && selectedProvider !== "random") {
-                params.append('provider', selectedProvider);
-            }
-            // If selectedProvider is "random", no 'provider' param is sent, so backend picks random.
-            
-            const queryString = params.toString();
-            if (queryString) {
-                url += `?${queryString}`;
-            }
+            const result = await apiRequest('/gen', 'POST', null, urlParams, generateEmailBtn);
 
-            try {
-                const response = await fetch(url, { method: 'POST' });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ detail: 'Failed to generate email. Server returned an error.' }));
-                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                currentSessionId = data.api_session_id;
-                currentEmailAddress = data.email_address;
-                currentProviderName = data.provider;
-                currentExpiresAt = data.expires_at;
-                displayedMessageIds.clear(); 
-
-                emailAddressP.textContent = currentEmailAddress;
-                sessionIdP.textContent = currentSessionId;
-                emailProviderP.textContent = currentProviderName;
-                emailExpiresP.textContent = currentExpiresAt ? new Date(currentExpiresAt).toLocaleString() : 'Not specified';
+            if (result.success && result.data) {
+                currentSessionId = result.data.api_session_id;
+                currentEmailAddress = result.data.email_address;
+                currentProviderName = result.data.provider;
+                currentExpiresAt = result.data.expires_at;
                 
-                emailInfoDiv.classList.remove('hidden');
-                checkMessagesBtn.classList.remove('hidden');
-                deleteSessionBtn.classList.remove('hidden');
-                copyEmailBtn.classList.remove('hidden');
-                
+                clientSideMessages = []; // Reset for new session
+                updateSessionUI();
                 saveSessionToLocalStorage();
-                showPlaceholderMessage('Click "Check Messages" to load your inbox.');
+                saveClientSideMessagesToLocalStorage(currentSessionId); // Save empty messages for new session
+                renderClientMessages(); // Will show placeholder
+                
                 if (messageCheckInterval) clearInterval(messageCheckInterval);
-                messageCheckInterval = setInterval(checkMessages, 15000); 
-
-            } catch (error) {
-                displayError(`Error generating email: ${error.message}`);
-            } finally {
-                generateEmailBtn.textContent = 'Generate New Email';
-                generateEmailBtn.disabled = false;
+                messageCheckInterval = setInterval(checkMessages, 15000);
             }
         }
 
         async function checkMessages(isManualClick = false) {
             if (!currentSessionId) {
-                if(isManualClick) displayError('No active email session. Please generate an email first.');
-                return;
+                if(isManualClick) displayError('No active email session.'); return;
             }
             if(isManualClick) clearError();
-            
-            checkMessagesBtn.disabled = true;
-            checkMessagesBtn.innerHTML = `<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div> Checking...`;
-            if(isManualClick) loadingMessages.classList.remove('hidden');
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/sessions/${currentSessionId}/messages`);
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch messages. Server returned an error.' }));
-                    if (response.status === 404) {
-                        clearSessionFromLocalStorage(); 
-                        throw new Error(errorData.detail || `Session not found on server (status: ${response.status})`);
-                    }
-                    if (isManualClick) { 
-                         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-                    } else {
-                        console.warn("Background message check failed:", errorData.detail || response.status);
-                        return; 
-                    }
-                }
-                const messages = await response.json();
-                let newMessagesFound = false;
-                messages.forEach(message => {
-                    if (!displayedMessageIds.has(message.id)) {
-                        renderMessage(message);
-                        displayedMessageIds.add(message.id);
-                        newMessagesFound = true;
-                    }
+            const result = await apiRequest(`/sessions/${currentSessionId}/messages`, 'GET', null, null, isManualClick ? checkMessagesBtn : null, isManualClick ? loadingMessages : null);
+
+            if (result.success && result.data) {
+                const apiMessages = result.data; 
+
+                const messageMap = new Map(clientSideMessages.map(msg => [msg.id, msg]));
+                apiMessages.forEach(msg => {
+                    messageMap.set(msg.id, msg); 
                 });
-
-                const placeholder = messagesContainer.querySelector('p.placeholder-message');
-                if (newMessagesFound && placeholder) {
-                    placeholder.remove();
-                }
+                clientSideMessages = Array.from(messageMap.values());
                 
-                if (messagesContainer.querySelectorAll('.message-item').length === 0) { // Check if any message items exist
-                     showPlaceholderMessage('No messages in inbox.');
-                }
+                renderClientMessages();
+                saveClientSideMessagesToLocalStorage(currentSessionId);
 
-
-            } catch (error) {
-                if(isManualClick) displayError(`Error fetching messages: ${error.message}`);
-                if (error.message.includes("404") || error.message.toLowerCase().includes("not found") || error.message.toLowerCase().includes("expired")) { 
-                    if (messageCheckInterval) clearInterval(messageCheckInterval);
-                     currentSessionId = null;
-                     currentEmailAddress = null;
-                     currentProviderName = null;
-                     currentExpiresAt = null;
-                     emailInfoDiv.classList.add('hidden');
-                     checkMessagesBtn.classList.add('hidden');
-                     deleteSessionBtn.classList.add('hidden');
-                     copyEmailBtn.classList.add('hidden');
-                     clearMessagesDisplay();
-                     clearSessionFromLocalStorage(); 
-                     showPlaceholderMessage('Session expired or deleted. Please generate a new email.');
-                }
-            } finally {
-                checkMessagesBtn.disabled = false;
-                checkMessagesBtn.textContent = 'Check Messages';
-                if(isManualClick) loadingMessages.classList.add('hidden');
+            } else if (result.status === 404) { // Session not found on server
+                if (messageCheckInterval) clearInterval(messageCheckInterval);
+                // Do not clear clientSideMessages here if we want to keep them despite server session loss
+                // However, the user experience might be confusing. For now, let's align with server state.
+                clearClientSideMessagesForSession(currentSessionId);
+                currentSessionId = null; currentEmailAddress = null; currentProviderName = null; currentExpiresAt = null;
+                emailInfoDiv.classList.add('hidden'); checkMessagesBtn.classList.add('hidden');
+                deleteSessionBtn.classList.add('hidden'); copyEmailBtn.classList.add('hidden');
+                clearSessionFromLocalStorage();
+                renderClientMessages(); // Will show placeholder
+                if(isManualClick) displayError(result.error?.detail || 'Session not found on server. Local messages cleared.');
+            } else if (isManualClick && !result.success) {
+                // Error already displayed by apiRequest
             }
         }
 
-        function escapeForSrcdoc(str) {
-            if (typeof str !== 'string') return '';
-            return str
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;') 
-                .replace(/`/g, '&#96;')      
-                .replace(/\$\{/g, '&#36;&#123;'); 
+
+        function escapeHTML(str) {
+            if (str === null || typeof str === 'undefined') return '';
+            return String(str).replace(/[&<>"'`=\/]/g, function (s) {
+                return {
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+                    '`': '&#96;', '=': '&#x3D;', '/': '&#x2F;'
+                }[s];
+            });
         }
 
-        function escapeForTemplateLiteral(str) {
-            if (str === null || typeof str === 'undefined') {
-                return ''; 
-            }
-            str = String(str);
-            return str.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
-        }
-
-        function renderMessage(message) {
+        function renderMessageDOM(message) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'bg-white p-3 sm:p-4 rounded-lg shadow-md message-bubble message-item hover:shadow-lg transition-shadow duration-200';
             messageDiv.dataset.messageId = message.id;
-            
-            // Prefer using message.raw.from if it's a string for a richer display, otherwise fallback to message.from_address
-            let fromDisplay = escapeForTemplateLiteral(message.from_address || 'Unknown Sender');
+
+            let fromDisplay = escapeHTML(message.from_address || 'Unknown Sender');
             if (message.raw && typeof message.raw.from === 'string' && message.raw.from.trim() !== '') {
-                fromDisplay = escapeForTemplateLiteral(message.raw.from);
-            } else if (message.raw && typeof message.raw.mail_from === 'string' && message.raw.mail_from.trim() !== '') { // GuerrillaMail specific
-                 fromDisplay = escapeForTemplateLiteral(message.raw.mail_from);
+                fromDisplay = escapeHTML(message.raw.from);
+            } else if (message.raw && typeof message.raw.mail_from === 'string' && message.raw.mail_from.trim() !== '') {
+                 fromDisplay = escapeHTML(message.raw.mail_from);
             }
-
-
-            const subjectText = escapeForTemplateLiteral(message.subject || '(No Subject)');
-            const dateText = escapeForTemplateLiteral(message.date ? new Date(message.date).toLocaleString() : 'Unknown Date');
-            const bodyText = escapeForTemplateLiteral(message.body || '(No text body)');
+            const subjectText = escapeHTML(message.subject || '(No Subject)');
+            const dateText = escapeHTML(message.date ? new Date(message.date).toLocaleString() : 'Unknown Date');
+            const bodyText = escapeHTML(message.body || '(No text body)');
 
             messageDiv.innerHTML = `
                 <div class="border-b border-slate-200 pb-2 mb-2">
@@ -450,101 +445,75 @@
                         <pre class="whitespace-pre-wrap text-xs sm:text-sm">${bodyText}</pre>
                     </div>
                 </details>
-            `; 
+            `;
 
             if (message.html) {
                 const rawHtml = Array.isArray(message.html) ? message.html.join('') : String(message.html);
-                const escapedHtmlForSrcdocAttribute = escapeForSrcdoc(rawHtml); 
-
                 const iframeContainer = document.createElement('div');
                 iframeContainer.className = 'mt-2 message-body-html';
-                
                 const pTag = document.createElement('p');
                 pTag.className = 'font-medium text-slate-700 mb-1 text-sm';
                 pTag.textContent = 'HTML View:';
-                
                 const iframe = document.createElement('iframe');
                 iframe.sandbox = 'allow-same-origin';
-                iframe.srcdoc = escapedHtmlForSrcdocAttribute;
-
+                iframe.srcdoc = rawHtml;
                 iframeContainer.appendChild(pTag);
                 iframeContainer.appendChild(iframe);
-                
                 const detailsElement = messageDiv.querySelector('details.group');
-                if (detailsElement) {
-                    detailsElement.appendChild(iframeContainer);
-                }
+                if (detailsElement) detailsElement.appendChild(iframeContainer);
             }
-            
-            const placeholder = messagesContainer.querySelector('p.placeholder-message');
-            if(placeholder) placeholder.remove();
-
-            messagesContainer.prepend(messageDiv); 
+            messagesContainer.appendChild(messageDiv);
         }
 
         async function deleteSession() {
-            if (!currentSessionId) {
-                displayError('No active email session to delete.');
-                return;
-            }
+            if (!currentSessionId) { displayError('No active email session to delete.'); return; }
             if (messageCheckInterval) clearInterval(messageCheckInterval);
             clearError();
-            deleteSessionBtn.disabled = true;
-            deleteSessionBtn.innerHTML = `<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div> Deleting...`;
+            const result = await apiRequest(`/sessions/${currentSessionId}`, 'DELETE', null, null, deleteSessionBtn);
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/sessions/${currentSessionId}`, { method: 'DELETE' });
-                if (!response.ok && response.status !== 204) { 
-                     const errorData = await response.json().catch(() => ({ detail: 'Failed to delete session. Server returned an error.' }));
-                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-                }
-                
-                currentSessionId = null;
-                currentEmailAddress = null;
-                currentProviderName = null;
-                currentExpiresAt = null;
-                emailInfoDiv.classList.add('hidden');
-                checkMessagesBtn.classList.add('hidden');
-                deleteSessionBtn.classList.add('hidden');
-                copyEmailBtn.classList.add('hidden');
-                clearMessagesDisplay();
+            if (result.success) {
+                clearClientSideMessagesForSession(currentSessionId); // Clears clientSideMessages array and local storage
+                currentSessionId = null; currentEmailAddress = null; currentProviderName = null; currentExpiresAt = null;
+                emailInfoDiv.classList.add('hidden'); checkMessagesBtn.classList.add('hidden');
+                deleteSessionBtn.classList.add('hidden'); copyEmailBtn.classList.add('hidden');
                 clearSessionFromLocalStorage();
-                showPlaceholderMessage('Session deleted. Generate a new email to continue.');
-                emailAddressP.textContent = '';
-                sessionIdP.textContent = '';
-                emailProviderP.textContent = '';
-                emailExpiresP.textContent = 'Not specified';
-
-            } catch (error) {
-                displayError(`Error deleting session: ${error.message}`);
-            } finally {
-                deleteSessionBtn.textContent = 'Delete Email Session';
-                deleteSessionBtn.disabled = false;
+                renderClientMessages(); // Will show placeholder
+                emailAddressP.textContent = ''; sessionIdP.textContent = '';
+                emailProviderP.textContent = ''; emailExpiresP.textContent = 'Not specified';
+                displaySuccess('Session deleted successfully.');
             }
         }
-        
+
+        async function fetchInitialProviders() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/providers`);
+                if (!response.ok) { console.error('Failed to fetch providers'); return; }
+                const providers = await response.json();
+                providers.forEach(provider => {
+                    const option = document.createElement('option');
+                    option.value = provider; option.textContent = provider;
+                    providerSelect.appendChild(option);
+                });
+            } catch (error) { console.error('Error fetching providers:', error); }
+        }
+
         copyEmailBtn.addEventListener('click', () => {
             if (currentEmailAddress) {
                 navigator.clipboard.writeText(currentEmailAddress).then(() => {
                     successCopyDiv.classList.remove('opacity-0');
-                    setTimeout(() => {
-                        successCopyDiv.classList.add('opacity-0');
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Failed to copy email: ', err);
-                    displayError('Failed to copy email to clipboard.');
-                });
+                    setTimeout(() => successCopyDiv.classList.add('opacity-0'), 2000);
+                }).catch(err => { console.error('Failed to copy email: ', err); displayError('Failed to copy email.'); });
             }
         });
 
         generateEmailBtn.addEventListener('click', generateEmail);
         checkMessagesBtn.addEventListener('click', () => checkMessages(true));
         deleteSessionBtn.addEventListener('click', deleteSession);
-        
+
         document.addEventListener('DOMContentLoaded', async () => {
-            await fetchProviders(); 
-            if (!loadSessionFromLocalStorage()) { 
-                showPlaceholderMessage('Generate an email to get started.');
+            await fetchInitialProviders();
+            if (!loadSessionFromLocalStorage()) {
+                showPlaceholderMessage(messagesContainer, 'Generate an email to get started.');
             }
         });
     </script>

@@ -7,75 +7,74 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
+        body {
+            font-family: 'Inter', sans-serif;
             overscroll-behavior-y: contain;
         }
-        .api-endpoint { 
-            border-left-width: 4px; 
+        .api-endpoint {
+            border-left-width: 4px;
             transition: box-shadow 0.3s ease-in-out;
         }
         .api-endpoint:hover {
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); 
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
-        .api-get { border-color: #3b82f6; } 
-        .api-post { border-color: #10b981; } 
-        .api-delete { border-color: #ef4444; } 
-        /* .api-patch { border-color: #f59e0b; }  Removed as config patch is gone */
-        
-        details summary { 
-            cursor: pointer; 
-            list-style: none; 
-            padding: 0.75rem 1rem; 
-            border-radius: 0.375rem; 
+        .api-get { border-color: #3b82f6; }
+        .api-post { border-color: #10b981; }
+        .api-delete { border-color: #ef4444; }
+
+        details summary {
+            cursor: pointer;
+            list-style: none;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
             transition: background-color 0.2s ease-in-out;
         }
         details summary:hover {
-            background-color: #f9fafb; 
+            background-color: #f9fafb;
         }
         details summary::-webkit-details-marker { display: none; }
-        details summary::before { 
-            content: '▶'; 
-            margin-right: 0.75rem; 
-            display: inline-block; 
+        details summary::before {
+            content: '▶';
+            margin-right: 0.75rem;
+            display: inline-block;
             transition: transform 0.2s ease-in-out;
             font-size: 0.8em;
-            color: #6b7280; 
+            color: #6b7280;
         }
-        details[open] summary::before { 
-            transform: rotate(90deg); 
+        details[open] summary::before {
+            transform: rotate(90deg);
         }
         details[open] summary {
-            background-color: #f3f4f6; 
+            background-color: #f3f4f6;
         }
-        
-        iframe { 
-            width: 100%; 
-            min-height: 250px; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 0.375rem; 
+
+        iframe {
+            width: 100%;
+            min-height: 250px;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
         }
-        
+
         input[type="text"], input[type="number"], select {
-            padding-top: 0.5rem;    
-            padding-bottom: 0.5rem; 
-            padding-left: 0.75rem;  
-            padding-right: 0.75rem; 
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
         }
         button, .button {
-            padding-top: 0.625rem;    
-            padding-bottom: 0.625rem; 
-            padding-left: 1.25rem;   
-            padding-right: 1.25rem;  
-            min-height: 44px; 
+            padding-top: 0.625rem;
+            padding-bottom: 0.625rem;
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+            min-height: 44px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; } 
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; } 
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; } 
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
     </style>
 </head>
@@ -94,7 +93,7 @@
                 <div><strong>Provider:</strong> <span id="currentProvider" class="font-mono text-sky-600">N/A</span></div>
             </div>
         </div>
-        
+
         <div id="globalErrorDisplay" class="my-4 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-700 rounded-md shadow hidden">
             <h3 class="font-semibold text-lg">API Error:</h3>
             <pre id="globalErrorMessage" class="whitespace-pre-wrap text-sm custom-scrollbar max-h-40 overflow-y-auto"></pre>
@@ -152,7 +151,7 @@
                     </div>
                 </details>
             </section>
-            
+
             <section id="api-sessions-post" class="api-endpoint api-post bg-white p-4 sm:p-6 rounded-xl shadow-lg">
                 <details>
                     <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
@@ -266,13 +265,13 @@
     </div>
 
     <script>
-        const API_BASE_URL = ''; 
+        const API_BASE_URL = '';
         let G_CURRENT_SESSION_ID = null;
         let G_CURRENT_EMAIL = null;
         let G_CURRENT_PROVIDER = null;
-        let G_FETCH_MESSAGES_SESSION_ID_TRACKER = null; 
+        let G_FETCH_MESSAGES_SESSION_ID_TRACKER = null;
         let G_DISPLAYED_MESSAGE_IDS = new Set();
-
+        const LS_DOCS_SESSION_KEY = 'tempMailApiDocsSession';
 
         const globalErrorDisplay = document.getElementById('globalErrorDisplay');
         const globalErrorMessage = document.getElementById('globalErrorMessage');
@@ -295,7 +294,37 @@
             globalErrorDisplay.classList.add('hidden');
             globalErrorMessage.textContent = '';
         }
-        
+
+        function saveDocsSessionToLocalStorage() {
+            if (G_CURRENT_SESSION_ID && G_CURRENT_EMAIL && G_CURRENT_PROVIDER) {
+                const sessionData = {
+                    sessionId: G_CURRENT_SESSION_ID,
+                    email: G_CURRENT_EMAIL,
+                    provider: G_CURRENT_PROVIDER
+                };
+                localStorage.setItem(LS_DOCS_SESSION_KEY, JSON.stringify(sessionData));
+            } else {
+                localStorage.removeItem(LS_DOCS_SESSION_KEY);
+            }
+        }
+
+        function loadDocsSessionFromLocalStorage() {
+            const savedSession = localStorage.getItem(LS_DOCS_SESSION_KEY);
+            if (savedSession) {
+                try {
+                    const sessionData = JSON.parse(savedSession);
+                    if (sessionData.sessionId && sessionData.email && sessionData.provider) {
+                        updateGlobalSessionInfo(sessionData.sessionId, sessionData.email, sessionData.provider);
+                        return true;
+                    }
+                } catch (e) {
+                    console.error("Error parsing docs session data from localStorage:", e);
+                    localStorage.removeItem(LS_DOCS_SESSION_KEY);
+                }
+            }
+            return false;
+        }
+
         function updateGlobalSessionInfo(sessionId, email, provider) {
             G_CURRENT_SESSION_ID = sessionId;
             G_CURRENT_EMAIL = email;
@@ -303,7 +332,7 @@
             document.getElementById('currentSessionId').textContent = sessionId || 'N/A';
             document.getElementById('currentEmail').textContent = email || 'N/A';
             document.getElementById('currentProvider').textContent = provider || 'N/A';
-            
+
             const messagesSessionIdInput = document.getElementById('messagesSessionId');
             const deleteSessionIdInput = document.getElementById('deleteSessionId');
 
@@ -315,15 +344,15 @@
                  deleteSessionIdInput.placeholder = 'Enter Session ID';
             }
             if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionId) {
-                document.getElementById('messagesResponse').innerHTML = ''; 
+                document.getElementById('messagesResponse').innerHTML = '';
                 G_DISPLAYED_MESSAGE_IDS.clear();
             }
             G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionId;
+            saveDocsSessionToLocalStorage();
         }
-        
+
         function escapeForSrcdoc(str) {
             if (typeof str !== 'string') return '';
-            // Escape backticks and `${` sequences for JavaScript template literal context
             return str.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
         }
 
@@ -353,17 +382,17 @@
 
             try {
                 const response = await fetch(url, options);
-                if (buttonElement && originalButtonText) buttonElement.innerHTML = originalButtonText; 
-                
-                if (response.status === 204) { 
+                if (buttonElement && originalButtonText) buttonElement.innerHTML = originalButtonText;
+
+                if (response.status === 204) {
                      if (buttonElement) buttonElement.disabled = false;
                     return { success: true, status: 204, data: null };
                 }
 
                 const responseData = await response.json().catch(e => {
                     console.warn("Response was not JSON", e);
-                    if (response.ok) return { detail: "Response was not JSON, but status was OK."}; 
-                    return { detail: `Server returned non-JSON response with status ${response.status}` }; 
+                    if (response.ok) return { detail: "Response was not JSON, but status was OK."};
+                    return { detail: `Server returned non-JSON response with status ${response.status}` };
                 });
 
                 if (!response.ok) {
@@ -382,16 +411,16 @@
                 return { success: false, status: error.status, error: error.data || { detail: errorMessageText } };
             }
         }
-        
+
         function displayMessageInDocs(containerId, messageData, append = false) {
             const container = document.getElementById(containerId);
             if (!append) {
-                container.innerHTML = ''; 
+                container.innerHTML = '';
                 G_DISPLAYED_MESSAGE_IDS.clear();
             }
-            
+
             if (!messageData || messageData.length === 0) {
-                if (container.querySelectorAll('.message-item').length === 0) { // Check if any actual messages exist
+                if (container.querySelectorAll('.message-item').length === 0) {
                     container.innerHTML = '<p class="text-slate-500 p-2 placeholder-message">No messages found.</p>';
                 }
                 return;
@@ -401,15 +430,15 @@
             if (placeholder) placeholder.remove();
 
             messageData.forEach(msg => {
-                if (G_DISPLAYED_MESSAGE_IDS.has(msg.id) && append) return; 
+                if (G_DISPLAYED_MESSAGE_IDS.has(msg.id) && append) return;
 
                 const msgDiv = document.createElement('div');
                 msgDiv.className = 'p-3 border border-slate-200 rounded-md bg-white shadow-sm hover:shadow-md transition-shadow message-item';
-                
+
                 let fromDisplay = msg.from_address || 'Unknown Sender';
                 if (msg.raw && typeof msg.raw.from === 'string' && msg.raw.from.trim() !== '') {
                     fromDisplay = msg.raw.from;
-                } else if (msg.raw && typeof msg.raw.mail_from === 'string' && msg.raw.mail_from.trim() !== '') { // GuerrillaMail specific
+                } else if (msg.raw && typeof msg.raw.mail_from === 'string' && msg.raw.mail_from.trim() !== '') {
                     fromDisplay = msg.raw.mail_from;
                 }
 
@@ -417,7 +446,7 @@
                 let dateText = msg.date ? new Date(msg.date).toLocaleString() : 'Unknown Date';
                 let bodyText = msg.body || '(No text body)';
                 let htmlContent = msg.html ? escapeForSrcdoc(Array.isArray(msg.html) ? msg.html.join('') : String(msg.html)) : '';
-                
+
                 msgDiv.innerHTML = `
                     <p class="text-xs text-slate-500 mb-1">ID: ${msg.id}</p>
                     <p class="text-sm"><strong>From:</strong> <span class="text-slate-700">${fromDisplay}</span></p>
@@ -449,19 +478,15 @@
         });
 
         document.getElementById('generateEmailGenBtn').addEventListener('click', async (e) => {
-            const provider = document.getElementById('genProvider').value || null; // Will be 'random' or specific provider, or null for random
+            const provider = document.getElementById('genProvider').value || null;
             const rushMode = document.getElementById('genRushMode').value === 'true';
             const params = {};
-            if (provider && provider.toLowerCase() !== 'random') { // Only add provider if it's specific
+            if (provider && provider.toLowerCase() !== 'random') {
                 params.provider = provider;
             }
-            // Rush mode is only relevant if tempmail.lol is chosen (either specifically or randomly by backend)
-            // The backend will handle rush_mode if tempmail.lol is the active provider.
-            // For client-side, we can pass it if tempmail.lol is explicitly selected or if no provider is specified (as tempmail.lol might be picked)
             if ((provider && provider.toLowerCase() === 'tempmail.lol') || !provider) {
                  params.rush_mode = rushMode;
             }
-
 
             const result = await apiRequest('/gen', 'POST', null, params, e.target);
             document.getElementById('genResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error generating email.';
@@ -469,7 +494,7 @@
                 updateGlobalSessionInfo(result.data.api_session_id, result.data.email_address, result.data.provider);
             }
         });
-        
+
         document.getElementById('createSessionBtn').addEventListener('click', async (e) => {
             const providerName = document.getElementById('sessionProviderName').value;
             const rushMode = document.getElementById('sessionRushMode').value === 'true';
@@ -495,21 +520,19 @@
                 displayGlobalError("No session ID specified or active. Please generate an email first.");
                 return;
             }
-            
-            // If the session ID being fetched is different from the one we were tracking, clear old messages.
-            if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionIdToUse) {
-                document.getElementById('messagesResponse').innerHTML = ''; // Clear visual
-                G_DISPLAYED_MESSAGE_IDS.clear(); // Clear tracked IDs
-                G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse; // Update tracker
-            }
 
+            if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionIdToUse) {
+                document.getElementById('messagesResponse').innerHTML = '';
+                G_DISPLAYED_MESSAGE_IDS.clear();
+                G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse;
+            }
 
             const result = await apiRequest(`/sessions/${sessionIdToUse}/messages`, 'GET', null, null, e.target);
             if (result.success) {
-                displayMessageInDocs('messagesResponse', result.data, true); // Always append for fetch button
+                displayMessageInDocs('messagesResponse', result.data, true);
             } else {
                  const messagesResponseDiv = document.getElementById('messagesResponse');
-                 if(messagesResponseDiv.querySelectorAll('.message-item').length === 0) { // Only show error if no messages are already there
+                 if(messagesResponseDiv.querySelectorAll('.message-item').length === 0) {
                     messagesResponseDiv.innerHTML = '<p class="text-red-600 p-2 placeholder-message">Error fetching messages.</p>';
                  }
             }
@@ -525,7 +548,7 @@
             const result = await apiRequest(`/sessions/${sessionIdToUse}`, 'DELETE', null, null, e.target);
             document.getElementById('deleteSessionResponse').textContent = result.success ? `Session ${sessionIdToUse.substring(0,15)}... deleted (Status: ${result.status})` : `Failed to delete (Status: ${result.status || 'N/A'})`;
             if (result.success && sessionIdToUse === G_CURRENT_SESSION_ID) {
-                updateGlobalSessionInfo(null, null, null); // This will also clear G_FETCH_MESSAGES_SESSION_ID_TRACKER
+                updateGlobalSessionInfo(null, null, null);
                  document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">Current session deleted.</p>';
                  G_DISPLAYED_MESSAGE_IDS.clear();
             }
@@ -536,18 +559,17 @@
             const pageSize = document.getElementById('historyPageSize').value;
             const result = await apiRequest('/history', 'GET', null, { page, page_size: pageSize }, e.target);
              if (result.success) {
-                // History items might not have all fields like live messages, adapt if needed.
-                // The current displayMessageInDocs should handle missing fields gracefully.
-                displayMessageInDocs('historyResponse', result.data.map(item => item.message), false); 
+                displayMessageInDocs('historyResponse', result.data.map(item => item.message), false);
             } else {
                  document.getElementById('historyResponse').innerHTML = '<p class="text-red-600 p-2 placeholder-message">Error fetching history.</p>';
             }
         });
-        
-        
+
+
         (async () => {
+            loadDocsSessionFromLocalStorage();
             const btn = document.getElementById('fetchProvidersBtn');
-            const result = await apiRequest('/providers', 'GET', null, null, btn); 
+            const result = await apiRequest('/providers', 'GET', null, null, btn);
             document.getElementById('providersResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error fetching providers on load.';
         })();
 
