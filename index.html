@@ -522,12 +522,11 @@
             messageDiv.className = 'bg-white p-3 sm:p-4 rounded-lg shadow-md message-bubble message-item hover:shadow-lg transition-shadow duration-200';
             messageDiv.dataset.messageId = message.id;
 
-            let fromDisplay = escapeHTML(message.from_address || 'Unknown Sender');
-            if (message.raw && typeof message.raw.from === 'string' && message.raw.from.trim() !== '') {
-                fromDisplay = escapeHTML(message.raw.from);
-            } else if (message.raw && typeof message.raw.mail_from === 'string' && message.raw.mail_from.trim() !== '') {
-                 fromDisplay = escapeHTML(message.raw.mail_from);
+            let fromDisplay = escapeHTML(message.from || 'Unknown Sender');
+            if (!message.from && message.raw && typeof message.raw.od === 'string' && message.raw.od.trim() !== '') {
+                fromDisplay = escapeHTML(message.raw.od);
             }
+            
             const subjectText = escapeHTML(message.subject || '(No Subject)');
             const dateText = escapeHTML(message.date ? new Date(message.date).toLocaleString() : 'Unknown Date');
             const bodyText = escapeHTML(message.body || '(No text body)');

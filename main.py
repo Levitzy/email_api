@@ -4,21 +4,37 @@ import json
 import logging
 import os
 import random
-import string
-import uuid
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, Coroutine
-from email.utils import parseaddr
+from typing import Any, Callable, Dict, List, Optional, Tuple, Coroutine, Union
 from contextlib import asynccontextmanager
 import shutil
+import uuid
+import re
 
-import requests
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Path as FastAPIPath
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel, EmailStr, Field
 import asyncio
+
+from provider.utils import ProviderNetworkError, ProviderAPIError, BaseProviderError
+from provider.guerrillamail_provider import (
+    setup_guerrillamail,
+    fetch_guerrillamail_messages,
+)
+from provider.mailtm_provider import setup_mail_tm, fetch_mail_tm_messages
+from provider.mailgw_provider import setup_mail_gw, fetch_mail_gw_messages
+from provider.tempmaillol_provider import (
+    setup_tempmail_lol,
+    fetch_tempmail_lol_messages,
+)
+from provider.dropmailme_provider import setup_dropmail_me, fetch_dropmail_me_messages
+from provider.disposableemail_provider import (
+    setup_disposablemail,
+    fetch_disposablemail_messages,
+)
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -163,584 +179,6 @@ def load_active_sessions() -> None:
         LOGGER.info("No active sessions file found. Starting with empty sessions.")
 
 
-def _rand_string(n: int = 10) -> str:
-    return "".join(
-        random.choice(string.ascii_lowercase + string.digits) for _ in range(n)
-    )
-
-
-def _format_timestamp_iso(
-    timestamp_input: Optional[Union[str, int, float]],
-) -> Optional[str]:
-    if timestamp_input is None:
-        return None
-    dt_obj = None
-    if isinstance(timestamp_input, (int, float)):
-        if timestamp_input > 2_000_000_000_000:
-            timestamp_input /= 1000
-        try:
-            dt_obj = datetime.fromtimestamp(timestamp_input, tz=timezone.utc)
-        except Exception as e:
-            LOGGER.warning(
-                f"Could not parse numeric timestamp: {timestamp_input} - {e}"
-            )
-            return str(timestamp_input)
-    elif isinstance(timestamp_input, str):
-        formats_to_try = (
-            "%Y-%m-%dT%H:%M:%S.%fZ",
-            "%Y-%m-%dT%H:%M:%SZ",
-            "%Y-%m-%d %H:%M:%S",
-            "%Y-%m-%dT%H:%M:%S",
-            "%Y-%m-%dT%H:%M:%S.%f",
-        )
-        for fmt in formats_to_try:
-            try:
-                dt_obj = datetime.strptime(timestamp_input, fmt)
-                break
-            except ValueError:
-                continue
-        if dt_obj is None:
-            try:
-                from dateutil import parser
-
-                dt_obj = parser.parse(timestamp_input)
-            except ImportError:
-                LOGGER.warning(
-                    f"dateutil not installed, could not parse: {timestamp_input}"
-                )
-                return timestamp_input
-            except Exception as e_du:
-                LOGGER.warning(
-                    f"Could not parse with dateutil: {timestamp_input} - {e_du}"
-                )
-                return timestamp_input
-    else:
-        LOGGER.warning(
-            f"Unsupported timestamp type: {type(timestamp_input)}, value: {timestamp_input}"
-        )
-        return str(timestamp_input)
-
-    if dt_obj:
-        if dt_obj.tzinfo is None or dt_obj.tzinfo.utcoffset(dt_obj) is None:
-            dt_obj = dt_obj.replace(tzinfo=timezone.utc)
-        else:
-            dt_obj = dt_obj.astimezone(timezone.utc)
-        return dt_obj.isoformat()
-    return str(timestamp_input)
-
-
-def make_requests_session(timeout: int = 15) -> requests.Session:
-    session = requests.Session()
-    session.headers.update({"User-Agent": "TempMailAPI/1.0 (FastAPI)"})
-    return session
-
-
-class ProviderError(HTTPException):
-    def __init__(self, status_code: int, detail: str):
-        super().__init__(status_code=status_code, detail=detail)
-
-
-class NetworkError(ProviderError):
-    def __init__(
-        self, detail: str = "A network error occurred with the email provider."
-    ):
-        super().__init__(status_code=503, detail=detail)
-
-
-class APIError(ProviderError):
-    def __init__(
-        self,
-        detail: str = "The email provider's API returned an error or unexpected response.",
-    ):
-        super().__init__(status_code=502, detail=detail)
-
-
-GM_API_URL = "https://api.guerrillamail.com/ajax.php"
-GM_USER_AGENT = "Mozilla/5.0 (TempMailAPI/1.0)"
-
-
-async def setup_guerrillamail() -> Tuple[str, str, Dict[str, Any]]:
-    sess = make_requests_session()
-    sess.headers.update({"User-Agent": GM_USER_AGENT})
-    try:
-        params = {"f": "get_email_address", "ip": "127.0.0.1", "agent": GM_USER_AGENT}
-        await asyncio.sleep(0.2)
-        res = await asyncio.to_thread(sess.get, GM_API_URL, params=params, timeout=15)
-        res.raise_for_status()
-        init_data = res.json()
-        if not init_data.get("sid_token") or not init_data.get("email_addr"):
-            raise APIError("GuerrillaMail: Failed to initialize session.")
-        sid_token = init_data["sid_token"]
-        address = init_data["email_addr"]
-        provider_data = {
-            "sid_token": sid_token,
-            "requests_session_headers": dict(sess.headers),
-        }
-        return f"biar-{uuid.uuid4()}", address, provider_data
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 429:
-            raise APIError(f"GuerrillaMail: Too Many Requests. Details: {e}")
-        raise NetworkError(f"GuerrillaMail: HTTP error: {e}") from e
-    except requests.RequestException as e:
-        raise NetworkError(f"GuerrillaMail: Network error: {e}") from e
-    except (json.JSONDecodeError, KeyError) as e:
-        raise APIError(f"GuerrillaMail: API error: {e}") from e
-
-
-async def fetch_guerrillamail_messages(
-    provider_data: Dict[str, Any],
-) -> List[Dict[str, Any]]:
-    sess = make_requests_session()
-    if "requests_session_headers" in provider_data:
-        sess.headers.update(provider_data["requests_session_headers"])
-    sid_token = provider_data.get("sid_token")
-    if not sid_token:
-        raise APIError("GuerrillaMail: Missing sid_token.")
-
-    all_provider_messages = []
-    try:
-        params = {"f": "check_email", "sid_token": sid_token, "seq": 0}
-        await asyncio.sleep(0.2)
-        res = await asyncio.to_thread(sess.get, GM_API_URL, params=params, timeout=15)
-        res.raise_for_status()
-        box_data = res.json()
-
-        for m_summary in box_data.get("list", []):
-            mail_id = str(m_summary["mail_id"])
-            fetch_params = {
-                "f": "fetch_email",
-                "sid_token": sid_token,
-                "email_id": mail_id,
-            }
-            await asyncio.sleep(0.1)
-            full_email_res = await asyncio.to_thread(
-                sess.get, GM_API_URL, params=fetch_params, timeout=15
-            )
-            full_email_res.raise_for_status()
-            email_content = full_email_res.json()
-
-            sender_email = None
-            raw_from_field = email_content.get("mail_from")
-            if raw_from_field:
-                name, addr = parseaddr(raw_from_field)
-                sender_email = addr if addr else raw_from_field
-
-            formatted_message = {
-                "id": mail_id,
-                "from": sender_email,
-                "subject": email_content.get("mail_subject"),
-                "date": _format_timestamp_iso(email_content.get("mail_date")),
-                "body": email_content.get("mail_body", "").strip(),
-                "raw": email_content,
-            }
-            all_provider_messages.append(formatted_message)
-    except requests.RequestException as e:
-        LOGGER.warning(f"GuerrillaMail: Network error polling: {e}")
-    except (json.JSONDecodeError, KeyError) as e:
-        LOGGER.warning(f"GuerrillaMail: API error polling: {e}")
-    return all_provider_messages
-
-
-async def _setup_mail_tm_gw_like(
-    base_url: str, provider_name: str
-) -> Tuple[str, str, Dict[str, Any]]:
-    sess = make_requests_session()
-    try:
-        await asyncio.sleep(1)
-        domains_res = await asyncio.to_thread(
-            sess.get, f"{base_url}/domains?page=1", timeout=15
-        )
-        domains_res.raise_for_status()
-        domains_data = domains_res.json()
-        if not domains_data.get("hydra:member") or not domains_data["hydra:member"][
-            0
-        ].get("domain"):
-            raise APIError(f"{provider_name}: No domains available.")
-        domain = domains_data["hydra:member"][0]["domain"]
-
-        address = f"{_rand_string()}@{domain}"
-        password = _rand_string(12)
-
-        account_payload = {"address": address, "password": password}
-        await asyncio.sleep(1)
-        account_res = await asyncio.to_thread(
-            sess.post, f"{base_url}/accounts", json=account_payload, timeout=15
-        )
-        account_res.raise_for_status()
-
-        token_payload = {"address": address, "password": password}
-        await asyncio.sleep(1)
-        token_res = await asyncio.to_thread(
-            sess.post, f"{base_url}/token", json=token_payload, timeout=15
-        )
-        token_res.raise_for_status()
-        token_data = token_res.json()
-        auth_token = token_data.get("token")
-        if not auth_token:
-            raise APIError(f"{provider_name}: Failed to get auth token.")
-
-        provider_data = {
-            "base_url": base_url,
-            "auth_token": auth_token,
-            "address": address,
-            "password": password,
-        }
-        return f"biar-{uuid.uuid4()}", address, provider_data
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 429:
-            raise APIError(f"{provider_name}: Too Many Requests. Details: {e}")
-        raise NetworkError(f"{provider_name}: HTTP error setup: {e}") from e
-    except requests.RequestException as e:
-        raise NetworkError(f"{provider_name}: Network error setup: {e}") from e
-    except (json.JSONDecodeError, KeyError, IndexError) as e:
-        raise APIError(f"{provider_name}: API error setup: {e}") from e
-
-
-async def _fetch_mail_tm_gw_like_messages(
-    provider_data: Dict[str, Any], provider_name: str
-) -> List[Dict[str, Any]]:
-    sess = make_requests_session()
-    base_url = provider_data["base_url"]
-    auth_token = provider_data["auth_token"]
-    address = provider_data["address"]
-    password = provider_data["password"]
-    headers = {"Authorization": f"Bearer {auth_token}"}
-    all_provider_messages = []
-
-    try:
-        await asyncio.sleep(0.5)
-        inbox_res = await asyncio.to_thread(
-            sess.get, f"{base_url}/messages", headers=headers, timeout=15
-        )
-
-        if inbox_res.status_code == 401:
-            LOGGER.info(f"{provider_name}: Token expired, re-authenticating.")
-            try:
-                token_payload = {"address": address, "password": password}
-                await asyncio.sleep(1)
-                token_res = await asyncio.to_thread(
-                    sess.post, f"{base_url}/token", json=token_payload, timeout=15
-                )
-                token_res.raise_for_status()
-                new_auth_token = token_res.json().get("token")
-                if not new_auth_token:
-                    raise APIError(f"{provider_name}: Re-auth failed (no new token).")
-
-                provider_data["auth_token"] = new_auth_token
-                api_session_id_for_update = provider_data.get("api_session_id")
-                if (
-                    api_session_id_for_update
-                    and api_session_id_for_update in active_api_sessions
-                ):
-                    active_api_sessions[api_session_id_for_update][
-                        "provider_specific_data"
-                    ]["auth_token"] = new_auth_token
-                    save_active_sessions()
-
-                headers = {"Authorization": f"Bearer {new_auth_token}"}
-                await asyncio.sleep(0.5)
-                inbox_res = await asyncio.to_thread(
-                    sess.get, f"{base_url}/messages", headers=headers, timeout=15
-                )
-            except requests.exceptions.HTTPError as reauth_e:
-                if reauth_e.response.status_code == 429:
-                    raise APIError(
-                        f"{provider_name}: Too Many Requests (re-auth). Details: {reauth_e}"
-                    )
-                LOGGER.error(f"{provider_name}: Re-auth failed: {reauth_e}")
-                raise APIError(f"{provider_name}: Re-auth failed.") from reauth_e
-            except Exception as reauth_e:
-                LOGGER.error(f"{provider_name}: Re-auth failed: {reauth_e}")
-                raise APIError(f"{provider_name}: Re-auth failed.") from reauth_e
-
-        inbox_res.raise_for_status()
-        inbox_data = inbox_res.json()
-
-        for m_summary in inbox_data.get("hydra:member", []):
-            msg_id = str(m_summary["id"])
-            await asyncio.sleep(0.1)
-            full_email_res = await asyncio.to_thread(
-                sess.get, f"{base_url}/messages/{msg_id}", headers=headers, timeout=15
-            )
-            full_email_res.raise_for_status()
-            email_content = full_email_res.json()
-
-            sender_email = None
-            from_field_data = email_content.get("from")
-            from_details_dict = None
-            if isinstance(from_field_data, list) and len(from_field_data) > 0:
-                from_details_dict = from_field_data[0]
-            elif isinstance(from_field_data, dict):
-                from_details_dict = from_field_data
-
-            if from_details_dict and isinstance(from_details_dict, dict):
-                raw_address_val = from_details_dict.get("address")
-                sender_name = from_details_dict.get("name", "")
-                if raw_address_val:
-                    full_from_string = (
-                        f"{sender_name} <{raw_address_val}>".strip()
-                        if sender_name
-                        else raw_address_val
-                    )
-                    name, addr = parseaddr(full_from_string)
-                    sender_email = addr if addr else raw_address_val
-            elif isinstance(from_field_data, str):
-                name, addr = parseaddr(from_field_data)
-                sender_email = addr if addr else from_field_data
-
-            formatted_message = {
-                "id": msg_id,
-                "from": sender_email,
-                "subject": email_content.get("subject"),
-                "date": _format_timestamp_iso(email_content.get("createdAt")),
-                "body": email_content.get("text", "").strip(),
-                "html": email_content.get("html", []),
-                "raw": email_content,
-            }
-            all_provider_messages.append(formatted_message)
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 429:
-            raise APIError(f"{provider_name}: Too Many Requests (fetch). Details: {e}")
-        LOGGER.warning(f"{provider_name}: HTTP error polling: {e}")
-    except requests.RequestException as e:
-        LOGGER.warning(f"{provider_name}: Network error polling: {e}")
-    except (json.JSONDecodeError, KeyError) as e:
-        LOGGER.warning(f"{provider_name}: API error polling: {e}")
-    return all_provider_messages
-
-
-async def setup_mail_tm() -> Tuple[str, str, Dict[str, Any]]:
-    return await _setup_mail_tm_gw_like("https://api.mail.tm", "mail.tm")
-
-
-async def fetch_mail_tm_messages(provider_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-    return await _fetch_mail_tm_gw_like_messages(provider_data, "mail.tm")
-
-
-async def setup_mail_gw() -> Tuple[str, str, Dict[str, Any]]:
-    return await _setup_mail_tm_gw_like("https://api.mail.gw", "mail.gw")
-
-
-async def fetch_mail_gw_messages(provider_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-    return await _fetch_mail_tm_gw_like_messages(provider_data, "mail.gw")
-
-
-TEMPMAIL_LOL_BASE_URL = "https://api.tempmail.lol"
-
-
-async def setup_tempmail_lol(rush: bool = False) -> Tuple[str, str, Dict[str, Any]]:
-    sess = make_requests_session()
-    endpoint = (
-        f"{TEMPMAIL_LOL_BASE_URL}/generate/rush"
-        if rush
-        else f"{TEMPMAIL_LOL_BASE_URL}/generate"
-    )
-    try:
-        await asyncio.sleep(0.2)
-        res = await asyncio.to_thread(sess.get, endpoint, timeout=15)
-        res.raise_for_status()
-        data = res.json()
-        address = data.get("address")
-        token = data.get("token")
-        if not address or not token:
-            raise APIError("tempmail.lol: Failed to get address or token.")
-        provider_data = {"token": token, "base_url": TEMPMAIL_LOL_BASE_URL}
-        return f"biar-{uuid.uuid4()}", address, provider_data
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 429:
-            raise APIError(f"tempmail.lol: Too Many Requests. Details: {e}")
-        raise NetworkError(f"tempmail.lol: HTTP error setup: {e}") from e
-    except requests.RequestException as e:
-        raise NetworkError(f"tempmail.lol: Network error setup: {e}") from e
-    except (json.JSONDecodeError, KeyError) as e:
-        raise APIError(f"tempmail.lol: API error setup: {e}") from e
-
-
-async def fetch_tempmail_lol_messages(
-    provider_data: Dict[str, Any],
-) -> List[Dict[str, Any]]:
-    sess = make_requests_session()
-    token = provider_data["token"]
-    base_url = provider_data["base_url"]
-    all_provider_messages = []
-    try:
-        await asyncio.sleep(0.2)
-        res = await asyncio.to_thread(sess.get, f"{base_url}/auth/{token}", timeout=15)
-        if res.status_code == 404:
-            LOGGER.warning(
-                f"tempmail.lol: Token {token} invalid (404). Session might be expired."
-            )
-            api_session_id_for_removal = provider_data.get("api_session_id")
-            if (
-                api_session_id_for_removal
-                and api_session_id_for_removal in active_api_sessions
-            ):
-                del active_api_sessions[api_session_id_for_removal]
-                save_active_sessions()
-            raise APIError(
-                f"tempmail.lol: Token {token} is invalid or session expired."
-            )
-        res.raise_for_status()
-        data = res.json()
-        for m_content in data.get("email", []):
-            date_val = m_content.get("date")
-            msg_pseudo_id = f"{m_content.get('from')}_{m_content.get('subject')}_{str(date_val)}_{len(m_content.get('body',''))}"
-
-            sender_email = None
-            raw_from_field_val = m_content.get("from")
-            if raw_from_field_val:
-                name, addr = parseaddr(raw_from_field_val)
-                sender_email = addr if addr else raw_from_field_val
-
-            formatted_message = {
-                "id": msg_pseudo_id,
-                "from": sender_email,
-                "subject": m_content.get("subject"),
-                "date": _format_timestamp_iso(date_val),
-                "body": m_content.get("body", "").strip(),
-                "html": m_content.get("html"),
-                "raw": m_content,
-            }
-            all_provider_messages.append(formatted_message)
-    except requests.RequestException as e:
-        LOGGER.warning(f"tempmail.lol: Network error polling: {e}")
-    except (json.JSONDecodeError, KeyError) as e:
-        LOGGER.warning(f"tempmail.lol: API error polling: {e}")
-    return all_provider_messages
-
-
-DROPMAIL_ME_BASE_URL = "https://dropmail.me/api/graphql"
-
-
-async def setup_dropmail_me() -> Tuple[str, str, Dict[str, Any]]:
-    sess = make_requests_session()
-    client_session_token = _rand_string(16)
-    query = "mutation { introduceSession { id expiresAt addresses { address } } }"
-    try:
-        await asyncio.sleep(0.2)
-        res = await asyncio.to_thread(
-            sess.post,
-            f"{DROPMAIL_ME_BASE_URL}/{client_session_token}",
-            json={"query": query},
-            headers={"Content-Type": "application/json"},
-            timeout=15,
-        )
-        res.raise_for_status()
-        response_data = res.json()
-        session_data = response_data.get("data", {}).get("introduceSession")
-        if not session_data:
-            raise APIError(
-                f"dropmail.me: 'introduceSession' data not found: {response_data.get('errors')}"
-            )
-
-        session_id_val = session_data.get("id")
-        addresses = session_data.get("addresses", [])
-        if not session_id_val or not addresses or not addresses[0].get("address"):
-            raise APIError("dropmail.me: Failed to get session ID or address.")
-        address = addresses[0]["address"]
-        expires_at_str = session_data.get("expiresAt")
-
-        provider_data = {
-            "session_id": session_id_val,
-            "client_session_token": client_session_token,
-            "base_url": DROPMAIL_ME_BASE_URL,
-            "expires_at": _format_timestamp_iso(expires_at_str),
-        }
-        return f"biar-{uuid.uuid4()}", address, provider_data
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 429:
-            raise APIError(f"dropmail.me: Too Many Requests. Details: {e}")
-        raise NetworkError(f"dropmail.me: HTTP error setup: {e}") from e
-    except requests.RequestException as e:
-        raise NetworkError(f"dropmail.me: Network error setup: {e}") from e
-    except (json.JSONDecodeError, KeyError, IndexError, TypeError) as e:
-        raise APIError(f"dropmail.me: API error setup: {e}") from e
-
-
-async def fetch_dropmail_me_messages(
-    provider_data: Dict[str, Any],
-) -> List[Dict[str, Any]]:
-    sess = make_requests_session()
-    dropmail_session_id = provider_data["session_id"]
-    client_session_token = provider_data["client_session_token"]
-    base_url = provider_data["base_url"]
-    query = "query($id: ID!){ session(id: $id){ mails{ id fromAddr toAddr headerSubject text html receivedAt downloadUrl } } }"
-    variables = {"id": dropmail_session_id}
-    all_provider_messages = []
-
-    try:
-        expires_at_val = provider_data.get("expires_at")
-        if expires_at_val and isinstance(expires_at_val, str):
-            expires_dt = datetime.fromisoformat(expires_at_val.replace("Z", "+00:00"))
-            if datetime.now(timezone.utc) > expires_dt:
-                LOGGER.warning(
-                    f"dropmail.me: Session {dropmail_session_id} has expired."
-                )
-                api_session_id_for_removal = provider_data.get("api_session_id")
-                if (
-                    api_session_id_for_removal
-                    and api_session_id_for_removal in active_api_sessions
-                ):
-                    del active_api_sessions[api_session_id_for_removal]
-                    save_active_sessions()
-                raise APIError(f"dropmail.me: Session has expired at {expires_at_val}.")
-
-        await asyncio.sleep(0.2)
-        res = await asyncio.to_thread(
-            sess.post,
-            f"{base_url}/{client_session_token}",
-            json={"query": query, "variables": variables},
-            headers={"Content-Type": "application/json"},
-            timeout=15,
-        )
-        res.raise_for_status()
-        response_data = res.json()
-        session_query_data = response_data.get("data", {}).get("session")
-
-        if session_query_data is None:
-            LOGGER.warning(
-                f"dropmail.me: Session data not found for ID {dropmail_session_id}. Might be expired."
-            )
-            api_session_id_for_removal = provider_data.get("api_session_id")
-            if (
-                api_session_id_for_removal
-                and api_session_id_for_removal in active_api_sessions
-            ):
-                del active_api_sessions[api_session_id_for_removal]
-                save_active_sessions()
-            raise APIError(
-                f"dropmail.me: Session {dropmail_session_id} not found or expired on server."
-            )
-
-        mails = session_query_data.get("mails", [])
-        for m_content in mails:
-            msg_id = str(m_content["id"])
-
-            sender_email = None
-            raw_from_field_val = m_content.get("fromAddr")
-            if raw_from_field_val:
-                name, addr = parseaddr(raw_from_field_val)
-                sender_email = addr if addr else raw_from_field_val
-
-            formatted_message = {
-                "id": msg_id,
-                "from": sender_email,
-                "to": m_content.get("toAddr"),
-                "subject": m_content.get("headerSubject"),
-                "date": _format_timestamp_iso(m_content.get("receivedAt")),
-                "body": m_content.get("text", "").strip(),
-                "html": m_content.get("html"),
-                "downloadUrl": m_content.get("downloadUrl"),
-                "raw": m_content,
-            }
-            all_provider_messages.append(formatted_message)
-    except requests.RequestException as e:
-        LOGGER.warning(f"dropmail.me: Network error polling: {e}")
-    except (json.JSONDecodeError, KeyError, TypeError) as e:
-        LOGGER.warning(f"dropmail.me: API error polling: {e}")
-    return all_provider_messages
-
-
 PROVIDER_SETUP_FUNCTIONS: Dict[
     str, Callable[..., Coroutine[Any, Any, Tuple[str, str, Dict[str, Any]]]]
 ] = {
@@ -749,16 +187,22 @@ PROVIDER_SETUP_FUNCTIONS: Dict[
     "mail.gw": setup_mail_gw,
     "tempmail.lol": setup_tempmail_lol,
     "dropmail.me": setup_dropmail_me,
+    "disposablemail": setup_disposablemail,
 }
 
 PROVIDER_FETCH_FUNCTIONS: Dict[
-    str, Callable[[Dict[str, Any]], Coroutine[Any, Any, List[Dict[str, Any]]]]
+    str,
+    Callable[
+        [Dict[str, Any], Dict[str, Any], Callable],
+        Coroutine[Any, Any, List[Dict[str, Any]]],
+    ],
 ] = {
     "guerrillamail": fetch_guerrillamail_messages,
     "mail.tm": fetch_mail_tm_messages,
     "mail.gw": fetch_mail_gw_messages,
     "tempmail.lol": fetch_tempmail_lol_messages,
     "dropmail.me": fetch_dropmail_me_messages,
+    "disposablemail": fetch_disposablemail_messages,
 }
 
 
@@ -771,7 +215,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Temp Mail API",
     description="API for temporary emails.",
-    version="1.5.2",
+    version="1.6.1",
     docs_url=None,
     redoc_url=None,
     lifespan=lifespan,
@@ -780,7 +224,7 @@ app = FastAPI(
 
 class Message(BaseModel):
     id: str
-    from_address: Optional[EmailStr] = Field(None, alias="from")
+    from_address: Optional[str] = Field(None, alias="from")
     to_address: Optional[EmailStr] = Field(None, alias="to")
     subject: Optional[str] = None
     date: Optional[str] = None
@@ -829,6 +273,26 @@ async def list_providers() -> List[str]:
     return list(PROVIDER_SETUP_FUNCTIONS.keys())
 
 
+async def _handle_provider_call(func: Callable, *args, **kwargs):
+    try:
+        return await func(*args, **kwargs)
+    except ProviderNetworkError as e:
+        raise HTTPException(status_code=e.status_code or 503, detail=e.message)
+    except ProviderAPIError as e:
+        raise HTTPException(status_code=e.status_code or 502, detail=e.message)
+    except BaseProviderError as e:
+        raise HTTPException(status_code=e.status_code or 500, detail=e.message)
+    except Exception as e:
+        LOGGER.error(
+            f"Unexpected error during provider call '{func.__name__}': {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred with the provider: {str(e)}",
+        )
+
+
 @app.post(
     "/sessions",
     response_model=EmailSessionResponse,
@@ -836,27 +300,19 @@ async def list_providers() -> List[str]:
     summary="Create new temp email session",
 )
 async def create_email_session(
-    provider_name: str = Query(...), rush_mode: bool = Query(False)
+    provider_name: str = Query(...),
+    rush_mode: bool = Query(False),
+    custom_name: Optional[str] = Query(None),
 ) -> EmailSessionResponse:
     if provider_name not in PROVIDER_SETUP_FUNCTIONS:
         raise HTTPException(
             status_code=400, detail=f"Provider '{provider_name}' not supported."
         )
     setup_func = PROVIDER_SETUP_FUNCTIONS[provider_name]
-    try:
-        if provider_name == "tempmail.lol":
-            api_session_id, email_address, provider_specific_data = await setup_func(
-                rush=rush_mode
-            )
-        else:
-            api_session_id, email_address, provider_specific_data = await setup_func()
-    except (NetworkError, APIError) as e:
-        raise e
-    except Exception as e:
-        LOGGER.error(f"Error creating session for {provider_name}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create session: {str(e)}"
-        )
+
+    api_session_id, email_address, provider_specific_data = await _handle_provider_call(
+        setup_func, rush=rush_mode, custom_name=custom_name
+    )
 
     created_at_dt = datetime.now(timezone.utc)
     session_data = {
@@ -893,7 +349,9 @@ async def create_email_session(
     summary="Generate temp email (random/specific provider)",
 )
 async def generate_email_address(
-    provider: Optional[str] = Query(None), rush_mode: bool = Query(False)
+    provider: Optional[str] = Query(None),
+    rush_mode: bool = Query(False),
+    custom_name: Optional[str] = Query(None),
 ) -> EmailSessionResponse:
     provider_to_use: str
     available_providers = list(PROVIDER_SETUP_FUNCTIONS.keys())
@@ -912,22 +370,9 @@ async def generate_email_address(
         )
 
     setup_func = PROVIDER_SETUP_FUNCTIONS[provider_to_use]
-    try:
-        if provider_to_use == "tempmail.lol":
-            api_session_id, email_address, provider_specific_data = await setup_func(
-                rush=rush_mode
-            )
-        else:
-            api_session_id, email_address, provider_specific_data = await setup_func()
-    except (NetworkError, APIError) as e:
-        raise e
-    except Exception as e:
-        LOGGER.error(
-            f"Error creating session for {provider_to_use} (/gen): {e}", exc_info=True
-        )
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create session: {str(e)}"
-        )
+    api_session_id, email_address, provider_specific_data = await _handle_provider_call(
+        setup_func, rush=rush_mode, custom_name=custom_name
+    )
 
     created_at_dt = datetime.now(timezone.utc)
     session_data = {
@@ -978,16 +423,18 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
     provider_specific_data["api_session_id"] = api_session_id
 
     try:
-        provider_messages_list = await fetch_func(provider_specific_data)
-    except APIError as e:
+        provider_messages_list = await fetch_func(
+            provider_specific_data, active_api_sessions, save_active_sessions
+        )
+    except ProviderAPIError as e:
         if (
-            "Session has expired" in str(e.detail)
-            or "Session data not found" in str(e.detail)
-            or "not found or expired on server" in str(e.detail)
-            or "token is invalid" in str(e.detail).lower()
+            "session expired" in e.message.lower()
+            or "session not found" in e.message.lower()
+            or "token is invalid" in e.message.lower()
+            or "session context lost" in e.message.lower()
         ):
             LOGGER.warning(
-                f"API session {api_session_id} ({provider_name}) invalid/expired by provider: {e.detail}. Removing local session."
+                f"API session {api_session_id} ({provider_name}) invalid/expired by provider: {e.message}. Removing local session."
             )
             if api_session_id in active_api_sessions:
                 del active_api_sessions[api_session_id]
@@ -996,9 +443,11 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
                 status_code=404,
                 detail=f"API session {api_session_id} no longer valid or expired by provider.",
             ) from e
-        raise e
-    except NetworkError as e:
-        raise e
+        raise HTTPException(status_code=e.status_code or 502, detail=e.message)
+    except ProviderNetworkError as e:
+        raise HTTPException(status_code=e.status_code or 503, detail=e.message)
+    except BaseProviderError as e:
+        raise HTTPException(status_code=e.status_code or 500, detail=e.message)
     except Exception as e:
         LOGGER.error(
             f"Error fetching messages from provider for {api_session_id} ({provider_name}): {e}",
@@ -1019,7 +468,7 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
         if not isinstance(provider_msg_data_dict, dict):
             continue
 
-        provider_msg_id = str(provider_msg_data_dict.get("id", _rand_string()))
+        provider_msg_id = str(provider_msg_data_dict.get("id", uuid.uuid4().hex[:10]))
         provider_msg_data_dict["id"] = provider_msg_id
 
         if provider_msg_id not in session_message_cache_map:
@@ -1043,6 +492,10 @@ async def get_messages_for_session(api_session_id: str) -> List[Message]:
             key=lambda m: (
                 datetime.fromisoformat(m["date"].replace("Z", "+00:00"))
                 if m.get("date")
+                and isinstance(m["date"], str)
+                and not re.match(
+                    r"(\d+)\s+(sec|min|hour|day)s?\.\s+ago", m["date"], re.IGNORECASE
+                )
                 else datetime.min.replace(tzinfo=timezone.utc)
             ),
             reverse=True,
