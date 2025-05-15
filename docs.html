@@ -10,6 +10,7 @@
         body {
             font-family: 'Inter', sans-serif;
             overscroll-behavior-y: contain;
+            scroll-behavior: smooth;
         }
         .api-endpoint {
             border-left-width: 4px;
@@ -48,13 +49,6 @@
             background-color: #f3f4f6;
         }
 
-        iframe {
-            width: 100%;
-            min-height: 250px;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-        }
-
         input[type="text"], input[type="number"], select {
             padding-top: 0.5rem;
             padding-bottom: 0.5rem;
@@ -71,200 +65,220 @@
             align-items: center;
             justify-content: center;
         }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
+        .response-pre {
+            background-color: #f8fafc; 
+            color: #334155; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 0.375rem; 
+            padding: 0.75rem; 
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        .message-item-iframe {
+            width: 100%;
+            min-height: 200px;
+            max-height: 400px; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 0.375rem; 
+            overflow: auto; 
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 p-3 sm:p-4 md:p-8">
+<body class="bg-slate-100 text-slate-800 p-2 sm:p-4 md:p-6">
     <div class="container mx-auto max-w-5xl">
-        <header class="mb-4 md:mb-6 text-center">
-            <div class="flex justify-start mb-4">
-                 <a href="/" class="text-sky-600 hover:text-sky-700 font-medium transition-colors">&larr; Back to App</a>
+        <header class="mb-4 md:mb-6">
+            <div class="flex justify-start items-center mb-3 sm:mb-4">
+                 <a href="/" class="text-sky-600 hover:text-sky-700 font-medium transition-colors py-2 px-3 rounded-md hover:bg-sky-100 text-sm sm:text-base">&larr; Back to App</a>
             </div>
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-700">Temp Mail API Interface</h1>
-            <p class="text-slate-600 mt-2 sm:mt-3 text-base sm:text-lg">Interact with and test the Temp Mail API endpoints.</p>
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-700">Temp Mail API Interface</h1>
+                <p class="text-slate-600 mt-1 sm:mt-2 text-sm sm:text-base">Interact with and test the Temp Mail API endpoints.</p>
+            </div>
         </header>
 
-        <div id="globalInfo" class="mb-6 md:mb-8 p-4 sm:p-5 bg-sky-50 border border-sky-200 rounded-lg shadow-sm">
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-2">Current Session:</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm sm:text-base">
+        <div id="globalInfo" class="mb-4 md:mb-6 p-3 sm:p-4 bg-sky-50 border border-sky-200 rounded-lg shadow-sm">
+            <h2 class="text-lg sm:text-xl font-semibold text-sky-700 mb-2">Current Session:</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
                 <div><strong>Email:</strong> <span id="currentEmail" class="font-mono text-sky-600 break-all">N/A</span></div>
                 <div><strong>Session ID:</strong> <span id="currentSessionId" class="font-mono text-sky-600 break-all">N/A</span></div>
-                <div><strong>Provider:</strong> <span id="currentProvider" class="font-mono text-sky-600">N/A</span></div>
+                <div><strong>Provider:</strong> <span id="currentProvider" class="font-mono text-sky-600 break-words">N/A</span></div>
             </div>
         </div>
 
-        <div id="globalErrorDisplay" class="my-4 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-700 rounded-md shadow hidden">
-            <h3 class="font-semibold text-lg">API Error:</h3>
-            <pre id="globalErrorMessage" class="whitespace-pre-wrap text-sm custom-scrollbar max-h-40 overflow-y-auto"></pre>
+        <div id="globalErrorDisplay" class="my-3 sm:my-4 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-700 rounded-md shadow hidden">
+            <h3 class="font-semibold text-base sm:text-lg">API Error:</h3>
+            <pre id="globalErrorMessage" class="whitespace-pre-wrap text-xs sm:text-sm custom-scrollbar max-h-40 overflow-y-auto"></pre>
         </div>
 
-        <div class="space-y-6 md:space-y-8">
+        <div class="space-y-4 md:space-y-6">
 
-            <section id="api-providers" class="api-endpoint api-get bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+            <section id="api-providers" class="api-endpoint api-get bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
                 <details open>
-                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
-                        <div class="flex items-center">
-                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2 sm:mr-3">GET</span>
-                            <span>/providers</span>
+                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div class="flex items-center mb-1 sm:mb-0">
+                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2">GET</span>
+                            <span class="break-all">/providers</span>
                         </div>
-                        <span class="text-sm sm:text-lg text-slate-500">List Available Providers</span>
+                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">List Available Providers</span>
                     </summary>
-                    <div class="mt-4 pt-4 border-t border-slate-200">
-                        <button id="fetchProvidersBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Fetch Providers</button>
-                        <div class="mt-4 p-3 bg-slate-50 rounded-md max-h-60 overflow-y-auto custom-scrollbar">
-                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
-                            <pre id="providersResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                    <div class="mt-3 pt-3 border-t border-slate-200">
+                        <button id="fetchProvidersBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Fetch Providers</button>
+                        <div class="mt-3">
+                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
+                            <pre id="providersResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
                         </div>
                     </div>
                 </details>
             </section>
 
-            <section id="api-gen" class="api-endpoint api-post bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+            <section id="api-gen" class="api-endpoint api-post bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
                 <details>
-                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
-                        <div class="flex items-center">
-                            <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2 sm:mr-3">POST</span>
-                            <span>/gen</span>
+                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div class="flex items-center mb-1 sm:mb-0">
+                            <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2">POST</span>
+                            <span class="break-all">/gen</span>
                         </div>
-                        <span class="text-sm sm:text-lg text-slate-500">Generate Email (Quick/Random)</span>
+                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Generate Email (Quick/Random)</span>
                     </summary>
-                    <div class="mt-4 pt-4 border-t border-slate-200">
-                        <p class="text-xs text-slate-500 mb-2">Note: This endpoint also supports GET requests.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="mt-3 pt-3 border-t border-slate-200">
+                        <p class="text-xs text-slate-500 mb-3">Note: This endpoint also supports GET requests. Use 'random' for provider to pick randomly.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                             <div>
                                 <label for="genProvider" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Provider (optional):</label>
-                                <input type="text" id="genProvider" name="genProvider" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="e.g., mail.tm, random">
+                                <input type="text" id="genProvider" name="genProvider" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="e.g., mail.tm, random">
                             </div>
                             <div>
-                                <label for="genRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (for tempmail.lol):</label>
-                                <select id="genRushMode" name="genRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
+                                <label for="genRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (tempmail.lol):</label>
+                                <select id="genRushMode" name="genRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm">
                                     <option value="false">False</option>
                                     <option value="true">True</option>
                                 </select>
                             </div>
                         </div>
-                        <button id="generateEmailGenBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Generate Email</button>
-                        <div class="mt-4 p-3 bg-slate-50 rounded-md max-h-60 overflow-y-auto custom-scrollbar">
-                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
-                            <pre id="genResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                        <button id="generateEmailGenBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Generate Email</button>
+                        <div class="mt-3">
+                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
+                            <pre id="genResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
                         </div>
                     </div>
                 </details>
             </section>
 
-            <section id="api-sessions-post" class="api-endpoint api-post bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+            <section id="api-sessions-post" class="api-endpoint api-post bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
                 <details>
-                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
-                        <div class="flex items-center">
-                            <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2 sm:mr-3">POST</span>
-                            <span>/sessions</span>
+                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div class="flex items-center mb-1 sm:mb-0">
+                            <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2">POST</span>
+                            <span class="break-all">/sessions</span>
                         </div>
-                        <span class="text-sm sm:text-lg text-slate-500">Create Session (Specific Provider)</span>
+                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Create Session (Specific Provider)</span>
                     </summary>
-                    <div class="mt-4 pt-4 border-t border-slate-200">
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="mt-3 pt-3 border-t border-slate-200">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                             <div>
                                 <label for="sessionProviderName" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Provider Name (required):</label>
-                                <input type="text" id="sessionProviderName" name="sessionProviderName" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="e.g., mail.tm">
+                                <input type="text" id="sessionProviderName" name="sessionProviderName" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="e.g., mail.tm">
                             </div>
                             <div>
-                                <label for="sessionRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (for tempmail.lol):</label>
-                                <select id="sessionRushMode" name="sessionRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
+                                <label for="sessionRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (tempmail.lol):</label>
+                                <select id="sessionRushMode" name="sessionRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm">
                                     <option value="false">False</option>
                                     <option value="true">True</option>
                                 </select>
                             </div>
                         </div>
-                        <button id="createSessionBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Create Session</button>
-                        <div class="mt-4 p-3 bg-slate-50 rounded-md max-h-60 overflow-y-auto custom-scrollbar">
-                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
-                            <pre id="createSessionResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                        <button id="createSessionBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Create Session</button>
+                        <div class="mt-3">
+                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
+                            <pre id="createSessionResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
                         </div>
                     </div>
                 </details>
             </section>
 
-            <section id="api-messages" class="api-endpoint api-get bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+            <section id="api-messages" class="api-endpoint api-get bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
                 <details>
-                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
-                         <div class="flex items-center">
-                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2 sm:mr-3">GET</span>
-                            <span>/sessions/{api_session_id}/messages</span>
+                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                         <div class="flex items-center mb-1 sm:mb-0">
+                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2">GET</span>
+                            <span class="break-all">/sessions/{id}/messages</span>
                         </div>
-                        <span class="text-sm sm:text-lg text-slate-500">Fetch Messages for Session</span>
+                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Fetch Messages for Session</span>
                     </summary>
-                    <div class="mt-4 pt-4 border-t border-slate-200">
-                        <div class="mb-4">
+                    <div class="mt-3 pt-3 border-t border-slate-200">
+                        <div class="mb-3">
                             <label for="messagesSessionId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">API Session ID (current if blank):</label>
-                            <input type="text" id="messagesSessionId" name="messagesSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="Uses current session ID">
+                            <input type="text" id="messagesSessionId" name="messagesSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="Uses current session ID">
                         </div>
-                        <button id="fetchMessagesBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Fetch Messages</button>
-                        <div class="mt-4 p-3 bg-slate-50 rounded-md">
-                            <h4 class="font-medium text-slate-600 mb-2 text-sm">Messages:</h4>
-                            <div id="messagesResponse" class="text-xs sm:text-sm space-y-3 max-h-96 overflow-y-auto custom-scrollbar p-1"></div>
+                        <button id="fetchMessagesBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Fetch Messages</button>
+                        <div class="mt-3">
+                            <h4 class="font-medium text-slate-600 mb-2 text-xs sm:text-sm">Messages:</h4>
+                            <div id="messagesResponse" class="text-xs sm:text-sm space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar p-1 bg-slate-50 rounded-md border border-slate-200 min-h-[100px]">
+                                <p class="text-slate-500 p-2 placeholder-message text-center">No messages fetched yet.</p>
+                            </div>
                         </div>
                     </div>
                 </details>
             </section>
 
-            <section id="api-delete-message" class="api-endpoint api-delete bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+            <section id="api-delete-message" class="api-endpoint api-delete bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
                 <details>
-                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
-                        <div class="flex items-center">
-                            <span class="font-mono text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-md mr-2 sm:mr-3">DELETE</span>
-                            <span>/sessions/{api_session_id}/messages/{message_id}</span>
+                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div class="flex items-center mb-1 sm:mb-0">
+                            <span class="font-mono text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-md mr-2">DELETE</span>
+                            <span class="break-all">/sessions/{id}/messages/{msg_id}</span>
                         </div>
-                        <span class="text-sm sm:text-lg text-slate-500">Delete Specific Message</span>
+                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Delete Specific Message</span>
                     </summary>
-                    <div class="mt-4 pt-4 border-t border-slate-200">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="mt-3 pt-3 border-t border-slate-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                             <div>
                                 <label for="deleteMessageSessionId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">API Session ID (current if blank):</label>
-                                <input type="text" id="deleteMessageSessionId" name="deleteMessageSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="Uses current session ID">
+                                <input type="text" id="deleteMessageSessionId" name="deleteMessageSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="Uses current session ID">
                             </div>
                             <div>
                                 <label for="deleteMessageId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Message ID (required):</label>
-                                <input type="text" id="deleteMessageId" name="deleteMessageId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="Enter Message ID">
+                                <input type="text" id="deleteMessageId" name="deleteMessageId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="Enter Message ID">
                             </div>
                         </div>
-                        <button id="deleteMessageBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Delete Message</button>
-                        <div class="mt-4 p-3 bg-slate-50 rounded-md">
-                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
-                            <pre id="deleteMessageResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                        <button id="deleteMessageBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Delete Message</button>
+                        <div class="mt-3">
+                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
+                            <pre id="deleteMessageResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
                         </div>
                     </div>
                 </details>
             </section>
 
-            <section id="api-delete-session" class="api-endpoint api-delete bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+            <section id="api-delete-session" class="api-endpoint api-delete bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
                 <details>
-                    <summary class="text-xl sm:text-2xl font-semibold text-slate-700 flex justify-between items-center">
-                        <div class="flex items-center">
-                            <span class="font-mono text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-md mr-2 sm:mr-3">DELETE</span>
-                            <span>/sessions/{api_session_id}</span>
+                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div class="flex items-center mb-1 sm:mb-0">
+                            <span class="font-mono text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-md mr-2">DELETE</span>
+                            <span class="break-all">/sessions/{api_session_id}</span>
                         </div>
-                        <span class="text-sm sm:text-lg text-slate-500">Delete Session</span>
+                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Delete Session</span>
                     </summary>
-                    <div class="mt-4 pt-4 border-t border-slate-200">
-                        <div class="mb-4">
+                    <div class="mt-3 pt-3 border-t border-slate-200">
+                        <div class="mb-3">
                             <label for="deleteSessionId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">API Session ID (current if blank):</label>
-                            <input type="text" id="deleteSessionId" name="deleteSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base" placeholder="Uses current session ID">
+                            <input type="text" id="deleteSessionId" name="deleteSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="Uses current session ID">
                         </div>
-                        <button id="deleteSessionDocsBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150">Delete Session</button>
-                        <div class="mt-4 p-3 bg-slate-50 rounded-md">
-                            <h4 class="font-medium text-slate-600 mb-1 text-sm">Response:</h4>
-                            <pre id="deleteSessionResponse" class="text-xs sm:text-sm whitespace-pre-wrap"></pre>
+                        <button id="deleteSessionDocsBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Delete Session</button>
+                        <div class="mt-3">
+                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
+                            <pre id="deleteSessionResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
                         </div>
                     </div>
                 </details>
             </section>
         </div>
-        <footer class="mt-12 py-6 text-center text-slate-500 text-sm">
-            Temp Mail API Interface &copy; 2024-2025
+        <footer class="mt-8 sm:mt-12 py-4 sm:py-6 text-center text-slate-500 text-xs sm:text-sm">
+            Temp Mail API Docs Interface &copy; 2025-2026
         </footer>
     </div>
 
@@ -341,20 +355,23 @@
             const deleteSessionIdInput = document.getElementById('deleteSessionId');
             const deleteMessageSessionIdInput = document.getElementById('deleteMessageSessionId');
 
+            const placeholderBase = 'Current: ';
+            const placeholderEnter = 'Enter Session ID';
 
             if (sessionId) {
-                const placeholderText = `Current: ${sessionId.substring(0,10)}...`;
+                const shortSessionId = sessionId.length > 15 ? `${sessionId.substring(0,10)}...` : sessionId;
+                const placeholderText = `${placeholderBase}${shortSessionId}`;
                 messagesSessionIdInput.placeholder = placeholderText;
                 deleteSessionIdInput.placeholder = placeholderText;
                 deleteMessageSessionIdInput.placeholder = placeholderText;
             } else {
-                 const placeholderText = 'Enter Session ID';
-                 messagesSessionIdInput.placeholder = placeholderText;
-                 deleteSessionIdInput.placeholder = placeholderText;
-                 deleteMessageSessionIdInput.placeholder = placeholderText;
+                 messagesSessionIdInput.placeholder = placeholderEnter;
+                 deleteSessionIdInput.placeholder = placeholderEnter;
+                 deleteMessageSessionIdInput.placeholder = placeholderEnter;
             }
             if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionId) {
-                document.getElementById('messagesResponse').innerHTML = '';
+                const messagesContainer = document.getElementById('messagesResponse');
+                messagesContainer.innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">No messages fetched yet for this session.</p>';
                 G_DISPLAYED_MESSAGE_IDS.clear();
             }
             G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionId;
@@ -363,7 +380,14 @@
 
         function escapeForSrcdoc(str) {
             if (typeof str !== 'string') return '';
-            return str.replace(/`/g, '\\`').replace(/\$\{/g, '\\${}');
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/`/g, '\\`')      
+                .replace(/\$\{/g, '\\${'); 
         }
 
 
@@ -372,7 +396,7 @@
             const originalButtonText = buttonElement ? buttonElement.innerHTML : null;
             if (buttonElement) {
                 buttonElement.disabled = true;
-                buttonElement.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Processing...`;
+                buttonElement.innerHTML = `<div class="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1 sm:mr-2"></div><span class="text-xs sm:text-sm">Processing...</span>`;
             }
 
             const url = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin);
@@ -400,17 +424,18 @@
                 }
 
                 let responseData;
-                try {
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
                     responseData = await response.json();
-                } catch (e) {
+                } else {
+                    const textResponse = await response.text();
                     if (response.ok) {
-                         responseData = { detail: "Response was not JSON, but status was OK."};
+                        responseData = { detail: "Response was not JSON, but status was OK.", content: textResponse };
                     } else {
-                        responseData = { detail: `Server returned non-JSON response with status ${response.status}` };
+                        responseData = { detail: `Server returned non-JSON response with status ${response.status}`, content: textResponse };
                     }
                 }
                 
-
                 if (!response.ok) {
                     throw { status: response.status, data: responseData };
                 }
@@ -418,7 +443,7 @@
                 return { success: true, status: response.status, data: responseData };
             } catch (error) {
                 console.error(`API Request Error (${method} ${endpoint}):`, error);
-                const errorMessageText = error.data ? (error.data.detail || JSON.stringify(error.data)) : error.message || 'Network error or invalid/unexpected response';
+                const errorMessageText = error.data ? (error.data.detail || (typeof error.data === 'string' ? error.data : JSON.stringify(error.data))) : error.message || 'Network error or invalid/unexpected response';
                 displayGlobalError(`Error ${error.status || 'Network'}: ${errorMessageText}`, error.data);
                 if (buttonElement && originalButtonText) {
                      buttonElement.innerHTML = originalButtonText;
@@ -435,21 +460,24 @@
                 G_DISPLAYED_MESSAGE_IDS.clear();
             }
 
-            if (!messageData || messageData.length === 0) {
-                if (container.querySelectorAll('.message-item').length === 0) {
-                    container.innerHTML = '<p class="text-slate-500 p-2 placeholder-message">No messages found.</p>';
-                }
+            const placeholder = container.querySelector('p.placeholder-message');
+            if (messageData && messageData.length > 0 && placeholder) {
+                placeholder.remove();
+            } else if ((!messageData || messageData.length === 0) && !append && !placeholder) {
+                 container.innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">No messages found.</p>';
+                return;
+            } else if ((!messageData || messageData.length === 0) && append && container.querySelectorAll('.message-item').length === 0) {
+                 container.innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">No new messages.</p>';
                 return;
             }
 
-            const placeholder = container.querySelector('p.placeholder-message');
-            if (placeholder) placeholder.remove();
 
             messageData.forEach(msg => {
                 if (G_DISPLAYED_MESSAGE_IDS.has(msg.id) && append) return;
 
                 const msgDiv = document.createElement('div');
-                msgDiv.className = 'p-3 border border-slate-200 rounded-md bg-white shadow-sm hover:shadow-md transition-shadow message-item';
+                msgDiv.className = 'p-2 sm:p-3 border border-slate-200 rounded-md bg-white shadow-sm hover:shadow-md transition-shadow message-item';
+                msgDiv.setAttribute('data-message-id', msg.id);
 
                 let fromDisplay = msg.from_address || 'Unknown Sender';
                 if (msg.raw && typeof msg.raw.from === 'string' && msg.raw.from.trim() !== '') {
@@ -462,35 +490,41 @@
                 let dateText = msg.date ? new Date(msg.date).toLocaleString() : 'Unknown Date';
                 let bodyText = msg.body || '(No text body)';
                 let htmlContent = msg.html ? escapeForSrcdoc(Array.isArray(msg.html) ? msg.html.join('') : String(msg.html)) : '';
+                
+                const uniqueDetailsId = `msg-details-${msg.id}-${Date.now()}`;
 
                 msgDiv.innerHTML = `
-                    <p class="text-xs text-slate-500 mb-1">ID: <span class="font-mono select-all">${msg.id}</span></p>
-                    <p class="text-sm"><strong>From:</strong> <span class="text-slate-700">${fromDisplay}</span></p>
-                    <p class="text-sm"><strong>Subject:</strong> <span class="text-slate-700">${subjectText}</span></p>
+                    <p class="text-xs text-slate-500 mb-1 break-all">ID: <span class="font-mono select-all">${msg.id}</span></p>
+                    <p class="text-xs sm:text-sm break-words"><strong>From:</strong> <span class="text-slate-700">${escapeForSrcdoc(fromDisplay)}</span></p>
+                    <p class="text-xs sm:text-sm break-words"><strong>Subject:</strong> <span class="text-slate-700">${escapeForSrcdoc(subjectText)}</span></p>
                     <p class="text-xs text-slate-500 mt-1"><strong>Date:</strong> ${dateText}</p>
-                    <details class="mt-2 text-sm group">
-                        <summary class="text-sky-600 hover:text-sky-700 cursor-pointer list-none group-open:mb-1">
+                    <details class="mt-2 text-xs sm:text-sm group" id="${uniqueDetailsId}">
+                        <summary class="text-sky-600 hover:text-sky-700 cursor-pointer list-none group-open:mb-1 text-xs">
                             <span class="group-open:hidden">Show Body/HTML ▼</span>
                             <span class="hidden group-open:inline">Hide Body/HTML ▲</span>
                         </summary>
                         <div class="mt-1 p-2 bg-slate-50 rounded border border-slate-200">
                             <p class="font-semibold text-slate-700 text-xs">Text Body:</p>
-                            <pre class="whitespace-pre-wrap text-xs custom-scrollbar max-h-32 overflow-y-auto">${bodyText}</pre>
+                            <pre class="whitespace-pre-wrap text-xs custom-scrollbar max-h-40 sm:max-h-48 overflow-y-auto p-1 bg-white border border-slate-100 rounded">${escapeForSrcdoc(bodyText)}</pre>
                             ${htmlContent ? `
                                 <p class="font-semibold mt-2 text-slate-700 text-xs">HTML Body:</p>
-                                <iframe srcdoc="\`${htmlContent}\`" sandbox="allow-same-origin" class="mt-1"></iframe>
-                            ` : ''}
+                                <iframe srcdoc="<html><head><base target='_blank'><style>body{font-family:sans-serif;padding:8px;overflow-wrap:break-word;}img{max-width:100%;height:auto;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ddd;padding:4px;text-align:left;}</style></head><body>${htmlContent}</body></html>" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin" class="mt-1 message-item-iframe"></iframe>
+                            ` : '<p class="text-xs text-slate-400 mt-1">(No HTML body)</p>'}
                         </div>
                     </details>
                 `;
-                container.appendChild(msgDiv);
+                if (append && container.firstChild && !container.querySelector('p.placeholder-message')) { 
+                    container.insertBefore(msgDiv, container.firstChild);
+                } else {
+                    container.appendChild(msgDiv);
+                }
                 if (append) G_DISPLAYED_MESSAGE_IDS.add(msg.id); 
             });
         }
 
         document.getElementById('fetchProvidersBtn').addEventListener('click', async (e) => {
             const result = await apiRequest('/providers', 'GET', null, null, e.target);
-            document.getElementById('providersResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error fetching providers.';
+            document.getElementById('providersResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : (result.error?.detail || 'Error fetching providers.');
         });
 
         document.getElementById('generateEmailGenBtn').addEventListener('click', async (e) => {
@@ -505,7 +539,7 @@
             }
 
             const result = await apiRequest('/gen', 'POST', null, params, e.target);
-            document.getElementById('genResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error generating email.';
+            document.getElementById('genResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : (result.error?.detail || 'Error generating email.');
             if (result.success && result.data) {
                 updateGlobalSessionInfo(result.data.api_session_id, result.data.email_address, result.data.provider);
             }
@@ -522,7 +556,7 @@
              if (providerName.toLowerCase() === 'tempmail.lol') params.rush_mode = rushMode; 
 
             const result = await apiRequest('/sessions', 'POST', null, params, e.target);
-            document.getElementById('createSessionResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error creating session.';
+            document.getElementById('createSessionResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : (result.error?.detail || 'Error creating session.');
             if (result.success && result.data) {
                  updateGlobalSessionInfo(result.data.api_session_id, result.data.email_address, result.data.provider);
             }
@@ -533,23 +567,24 @@
             const sessionIdToUse = sessionIdInput || G_CURRENT_SESSION_ID;
 
             if (!sessionIdToUse) {
-                displayGlobalError("No session ID specified or active. Please generate an email first.");
+                displayGlobalError("No session ID specified or active. Please generate or create an email session first.");
                 return;
             }
 
-            if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionIdToUse) {
-                document.getElementById('messagesResponse').innerHTML = ''; 
+            const isNewSessionForFetch = G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionIdToUse;
+            if (isNewSessionForFetch) {
+                document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">Fetching messages...</p>'; 
                 G_DISPLAYED_MESSAGE_IDS.clear(); 
                 G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse; 
             }
 
             const result = await apiRequest(`/sessions/${sessionIdToUse}/messages`, 'GET', null, null, e.target);
             if (result.success) {
-                displayMessageInDocs('messagesResponse', result.data, true); 
+                displayMessageInDocs('messagesResponse', result.data, !isNewSessionForFetch); 
             } else {
                  const messagesResponseDiv = document.getElementById('messagesResponse');
-                 if(messagesResponseDiv.querySelectorAll('.message-item').length === 0) {
-                    messagesResponseDiv.innerHTML = '<p class="text-red-600 p-2 placeholder-message">Error fetching messages.</p>';
+                 if(messagesResponseDiv.querySelectorAll('.message-item').length === 0) { 
+                    messagesResponseDiv.innerHTML = `<p class="text-red-600 p-2 placeholder-message text-center">Error fetching messages. ${result.error?.detail || ''}</p>`;
                  }
             }
         });
@@ -571,18 +606,15 @@
             const result = await apiRequest(`/sessions/${sessionIdToUse}/messages/${messageId}`, 'DELETE', null, null, e.target);
             const responseOutput = document.getElementById('deleteMessageResponse');
             if (result.success && result.status === 204) {
-                responseOutput.textContent = `Message ${messageId} deleted successfully from session ${sessionIdToUse.substring(0,10)}... (Status: 204 No Content)`;
+                responseOutput.textContent = `Message ${messageId} marked for deletion from session ${sessionIdToUse.substring(0,10)}... (Status: 204 No Content). Refresh messages to see changes.`;
                 if (sessionIdToUse === G_FETCH_MESSAGES_SESSION_ID_TRACKER) {
-                    const msgElements = document.querySelectorAll('#messagesResponse .message-item');
-                    msgElements.forEach(el => {
-                        const idSpan = el.querySelector('p span.font-mono.select-all');
-                        if (idSpan && idSpan.textContent === messageId) {
-                            el.remove();
-                        }
-                    });
+                    const msgElement = document.querySelector(`#messagesResponse .message-item[data-message-id="${messageId}"]`);
+                    if (msgElement) {
+                        msgElement.remove();
+                    }
                     G_DISPLAYED_MESSAGE_IDS.delete(messageId); 
                     if (document.getElementById('messagesResponse').querySelectorAll('.message-item').length === 0) {
-                        document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">No messages found (or last one deleted).</p>';
+                        document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">No messages found (or last one deleted).</p>';
                     }
                 }
             } else {
@@ -599,10 +631,11 @@
                 return;
             }
             const result = await apiRequest(`/sessions/${sessionIdToUse}`, 'DELETE', null, null, e.target);
-            document.getElementById('deleteSessionResponse').textContent = result.success ? `Session ${sessionIdToUse.substring(0,15)}... deleted (Status: ${result.status})` : `Failed to delete (Status: ${result.status || 'N/A'})`;
+            const responseEl = document.getElementById('deleteSessionResponse');
+            responseEl.textContent = result.success ? `Session ${sessionIdToUse.substring(0,15)}... deleted (Status: ${result.status})` : `Failed to delete (Status: ${result.status || 'N/A'}). ${result.error?.detail || ''}`;
             if (result.success && sessionIdToUse === G_CURRENT_SESSION_ID) { 
                 updateGlobalSessionInfo(null, null, null); 
-                 document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message">Current session deleted.</p>'; 
+                 document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">Current session deleted. Generate a new one to continue.</p>'; 
                  G_DISPLAYED_MESSAGE_IDS.clear();
             }
         });
@@ -611,12 +644,16 @@
             loadDocsSessionFromLocalStorage(); 
             const btn = document.getElementById('fetchProvidersBtn');
             if (btn) { 
-                const result = await apiRequest('/providers', 'GET', null, null, btn);
+                const result = await apiRequest('/providers', 'GET', null, null, btn); 
                 const providersResponseEl = document.getElementById('providersResponse');
                 if (providersResponseEl) { 
-                    providersResponseEl.textContent = result.success ? JSON.stringify(result.data, null, 2) : 'Error fetching providers on load.';
+                    providersResponseEl.textContent = result.success ? JSON.stringify(result.data, null, 2) : (result.error?.detail || 'Error fetching providers on load.');
                 }
             }
+            if (!G_CURRENT_SESSION_ID) {
+                document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">Generate or create a session to see messages.</p>';
+            }
+
         })();
 
     </script>
