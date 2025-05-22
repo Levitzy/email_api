@@ -49,8 +49,8 @@ async def setup_tempmail_lol(
 
 async def fetch_tempmail_lol_messages(
     provider_data: Dict[str, Any],
-    active_sessions_ref: Dict[str, Any],
-    save_sessions_func: callable,
+    active_sessions_ref: Dict[str, Any] = None,
+    save_sessions_func: callable = None,
 ) -> List[Dict[str, Any]]:
     sess = make_requests_session()
     token = provider_data["token"]
@@ -63,13 +63,14 @@ async def fetch_tempmail_lol_messages(
             LOGGER.warning(
                 f"tempmail.lol: Token {token} invalid (404). Session might be expired."
             )
-            api_session_id_for_removal = provider_data.get("api_session_id")
-            if (
-                api_session_id_for_removal
-                and api_session_id_for_removal in active_sessions_ref
-            ):
-                del active_sessions_ref[api_session_id_for_removal]
-                save_sessions_func()
+            if active_sessions_ref and save_sessions_func:
+                api_session_id_for_removal = provider_data.get("api_session_id")
+                if (
+                    api_session_id_for_removal
+                    and api_session_id_for_removal in active_sessions_ref
+                ):
+                    del active_sessions_ref[api_session_id_for_removal]
+                    save_sessions_func()
             raise ProviderAPIError(
                 f"tempmail.lol: Token {token} is invalid or session expired."
             )

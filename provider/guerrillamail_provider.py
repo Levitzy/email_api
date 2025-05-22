@@ -48,6 +48,8 @@ async def setup_guerrillamail(**kwargs) -> Tuple[str, str, Dict[str, Any]]:
 
 async def fetch_guerrillamail_messages(
     provider_data: Dict[str, Any],
+    active_sessions_ref: Dict[str, Any] = None,
+    save_sessions_func: callable = None,
 ) -> List[Dict[str, Any]]:
     sess = make_requests_session()
     if "requests_session_headers" in provider_data:

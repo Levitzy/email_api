@@ -3,13 +3,21 @@ import json
 import uuid
 from email.utils import parseaddr
 from typing import Any, Dict, List, Tuple
-from datetime import datetime, timezone # Ensure datetime and timezone are imported
+from datetime import datetime, timezone
 
 import requests
 
-from .utils import LOGGER, _rand_string, _format_timestamp_iso, make_requests_session, ProviderNetworkError, ProviderAPIError
+from .utils import (
+    LOGGER,
+    _rand_string,
+    _format_timestamp_iso,
+    make_requests_session,
+    ProviderNetworkError,
+    ProviderAPIError,
+)
 
 DROPMAIL_ME_BASE_URL = "https://dropmail.me/api/graphql"
+
 
 async def setup_dropmail_me(**kwargs) -> Tuple[str, str, Dict[str, Any]]:
     sess = make_requests_session()
@@ -55,8 +63,11 @@ async def setup_dropmail_me(**kwargs) -> Tuple[str, str, Dict[str, Any]]:
     except (json.JSONDecodeError, KeyError, IndexError, TypeError) as e:
         raise ProviderAPIError(f"dropmail.me: API error setup: {e}") from e
 
+
 async def fetch_dropmail_me_messages(
-    provider_data: Dict[str, Any], active_sessions_ref: Dict[str, Any], save_sessions_func: callable
+    provider_data: Dict[str, Any],
+    active_sessions_ref: Dict[str, Any] = None,
+    save_sessions_func: callable = None,
 ) -> List[Dict[str, Any]]:
     sess = make_requests_session()
     dropmail_session_id = provider_data["session_id"]
@@ -74,11 +85,17 @@ async def fetch_dropmail_me_messages(
                 LOGGER.warning(
                     f"dropmail.me: Session {dropmail_session_id} has expired."
                 )
-                api_session_id_for_removal = provider_data.get("api_session_id")
-                if api_session_id_for_removal and api_session_id_for_removal in active_sessions_ref:
-                    del active_sessions_ref[api_session_id_for_removal]
-                    save_sessions_func()
-                raise ProviderAPIError(f"dropmail.me: Session has expired at {expires_at_val}.")
+                if active_sessions_ref and save_sessions_func:
+                    api_session_id_for_removal = provider_data.get("api_session_id")
+                    if (
+                        api_session_id_for_removal
+                        and api_session_id_for_removal in active_sessions_ref
+                    ):
+                        del active_sessions_ref[api_session_id_for_removal]
+                        save_sessions_func()
+                raise ProviderAPIError(
+                    f"dropmail.me: Session has expired at {expires_at_val}."
+                )
 
         await asyncio.sleep(0.2)
         res = await asyncio.to_thread(
@@ -96,10 +113,14 @@ async def fetch_dropmail_me_messages(
             LOGGER.warning(
                 f"dropmail.me: Session data not found for ID {dropmail_session_id}. Might be expired."
             )
-            api_session_id_for_removal = provider_data.get("api_session_id")
-            if api_session_id_for_removal and api_session_id_for_removal in active_sessions_ref:
-                del active_sessions_ref[api_session_id_for_removal]
-                save_sessions_func()
+            if active_sessions_ref and save_sessions_func:
+                api_session_id_for_removal = provider_data.get("api_session_id")
+                if (
+                    api_session_id_for_removal
+                    and api_session_id_for_removal in active_sessions_ref
+                ):
+                    del active_sessions_ref[api_session_id_for_removal]
+                    save_sessions_func()
             raise ProviderAPIError(
                 f"dropmail.me: Session {dropmail_session_id} not found or expired on server."
             )
@@ -114,11 +135,15 @@ async def fetch_dropmail_me_messages(
                 sender_email = addr if addr else raw_from_field_val
 
             formatted_message = {
-                "id": msg_id, "from": sender_email, "to": m_content.get("toAddr"),
+                "id": msg_id,
+                "from": sender_email,
+                "to": m_content.get("toAddr"),
                 "subject": m_content.get("headerSubject"),
                 "date": _format_timestamp_iso(m_content.get("receivedAt")),
-                "body": m_content.get("text", "").strip(), "html": m_content.get("html"),
-                "downloadUrl": m_content.get("downloadUrl"), "raw": m_content,
+                "body": m_content.get("text", "").strip(),
+                "html": m_content.get("html"),
+                "downloadUrl": m_content.get("downloadUrl"),
+                "raw": m_content,
             }
             all_provider_messages.append(formatted_message)
     except requests.RequestException as e:

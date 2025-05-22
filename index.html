@@ -3,236 +3,608 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BiarMail - Temp Mail Client</title>
+    <title>BiarMail - Free Temp Mail Client</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
     <style>
+        :root {
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --gradient-secondary: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --gradient-dark: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.4);
+            --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-button: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            overscroll-behavior-y: contain;
+            background: var(--gradient-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
         }
-        .message-bubble {
-            max-width: 100%;
-            word-wrap: break-word;
-        }
-        .message-body-html iframe {
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            min-height: 250px;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
         }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: var(--shadow-card);
+            color: #1f2937;
+        }
+
+        .glass-card-dark {
+            background: rgba(31, 41, 55, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow-card);
+            color: #f9fafb;
+        }
+
+        .glass-button {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #1f2937;
+        }
+
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-button);
+            color: #1f2937;
+        }
+
+        .glass-button-dark {
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #f9fafb;
+        }
+
+        .glass-button-dark:hover {
+            background: rgba(31, 41, 55, 0.9);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-button);
+            color: #f9fafb;
+        }
+
+        .gradient-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-gradient-primary {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-gradient-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-button);
+        }
+
+        .btn-gradient-secondary {
+            background: var(--gradient-secondary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-gradient-secondary:hover {
+            background: linear-gradient(135deg, #db2777 0%, #f59e0b 100%);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .btn-gradient-success {
+            background: var(--gradient-success);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-gradient-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .btn-gradient-danger {
+            background: var(--gradient-danger);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-gradient-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .message-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #1f2937;
+        }
+
+        .message-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .email-address-display {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            word-break: break-all;
+            color: #1e40af;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background: #10b981;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-expired {
+            background: #ef4444;
+        }
+
+        .sidebar-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 10px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #64748b;
-            border-radius: 4px;
+            background: rgba(59, 130, 246, 0.6);
+            border-radius: 10px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: rgba(59, 130, 246, 0.8);
         }
-        button, .button, select, input[type="text"], input[type="number"] {
-            padding-top: 0.625rem;
-            padding-bottom: 0.625rem;
-            padding-left: 1.25rem;
-            padding-right: 1.25rem;
-            min-height: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.375rem;
-            border: 1px solid #d1d5db;
+
+        .floating-animation {
+            animation: floating 6s ease-in-out infinite;
         }
-        select {
-            justify-content: flex-start;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            padding-right: 2.5rem;
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 28px;
+
+        .animate-pulse-glow {
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+            }
+            50% {
+                opacity: 0.9;
+                box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+            }
         }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 28px;
+
+        .feature-highlight {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #1e40af;
         }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+
+        @media (max-width: 576px) {
+            .floating-animation {
+                animation: none;
+            }
+            
+            .glass-card {
+                margin: 0.5rem;
+                padding: 1rem !important;
+            }
+            
+            .btn {
+                font-size: 0.9rem;
+                padding: 0.75rem 1rem;
+            }
+            
+            .display-1 {
+                font-size: 2.5rem;
+            }
+            
+            h1 {
+                font-size: 2.5rem !important;
+            }
         }
-        input:checked + .slider {
-            background-color: #2563eb;
+
+        @media (max-width: 768px) {
+            .sidebar-glass {
+                width: 90vw !important;
+            }
         }
-        input:focus + .slider {
-            box-shadow: 0 0 1px #2563eb;
+
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            color: #1f2937;
+            font-weight: 500;
         }
-        input:checked + .slider:before {
-            transform: translateX(22px);
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+            color: #1f2937;
         }
-         #sidebar.translate-x-0 + #sidebarBackdrop {
-            opacity: 1;
-            pointer-events: auto;
+
+        .alert {
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        #sidebar.-translate-x-full + #sidebarBackdrop {
-            opacity: 0;
-            pointer-events: none;
+
+        .accordion-button {
+            background: rgba(59, 130, 246, 0.1) !important;
+            color: #1e40af !important;
+            font-weight: 600;
+            border: none;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: #1e40af !important;
+        }
+
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        }
+
+        .text-contrast {
+            color: #1f2937 !important;
+            font-weight: 600;
+        }
+
+        .text-contrast-light {
+            color: #6b7280 !important;
+            font-weight: 500;
+        }
+
+        .badge-custom {
+            background: rgba(59, 130, 246, 0.2);
+            color: #1e40af;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+
+        .message-content-visible {
+            background: #ffffff !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            padding: 1rem !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.9rem !important;
+            line-height: 1.6 !important;
+            color: #000000 !important;
+            white-space: pre-wrap !important;
+            word-wrap: break-word !important;
+            max-height: 400px !important;
+            overflow-y: auto !important;
+            display: block !important;
+            visibility: visible !important;
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center p-3 sm:p-4 md:p-6 relative">
+<body class="min-h-screen relative">
+    <button id="sidebarToggle" class="fixed top-4 left-4 z-50 glass-button p-3 rounded-xl transition-all duration-300" style="z-index: 1060;">
+        <i class="bi bi-list fs-5"></i>
+    </button>
 
-    <div class="fixed top-4 left-4 z-50">
-        <button id="sidebarToggle" class="p-2 bg-white rounded-md shadow-md text-slate-600 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-opacity duration-300">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-        </button>
-    </div>
-
-    <div id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-xl transform -translate-x-full transition-transform duration-300 ease-in-out p-4 space-y-4">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-sky-600">Menu</h2>
-            <button id="closeSidebarBtn" class="p-1 text-slate-500 hover:text-slate-700">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-        <nav>
-            <a href="/docs" class="block py-2.5 px-4 rounded-lg text-slate-700 hover:bg-sky-100 hover:text-sky-700 transition-colors duration-150 ease-in-out">API Docs</a>
-        </nav>
-    </div>
-
-    <div id="sidebarBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300 ease-in-out opacity-0 pointer-events-none"></div>
-
-    <div class="w-full max-w-2xl bg-white shadow-2xl rounded-xl p-5 sm:p-6 md:p-8">
-        <header class="mb-6 md:mb-8 text-center">
-            <h1 class="text-3xl sm:text-4xl font-bold text-sky-600">BiarMail</h1>
-            <p class="text-slate-600 mt-2 text-sm sm:text-base">Your Instant Disposable Email Address</p>
-        </header>
-
-        <div id="sessionContent" class="active">
-            <div class="mb-4">
-                <label for="providerSelect" class="block text-sm font-medium text-slate-700 mb-1">Select Provider:</label>
-                <select id="providerSelect" class="w-full bg-white border-slate-300 text-slate-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition duration-150 ease-in-out">
-                    <option value="random">Random (Recommended)</option>
-                </select>
-            </div>
-
-            <div id="rushModeContainer" class="mb-4 hidden items-center">
-                <label for="rushModeToggle" class="block text-sm font-medium text-slate-700 mr-3">Rush Mode (tempmail.lol):</label>
-                <label class="switch">
-                    <input type="checkbox" id="rushModeToggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-
-
-            <div class="mb-6 space-y-3 sm:space-y-4">
-                <button id="generateEmailBtn" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75">
-                    Generate New Email
-                </button>
-                <button id="deleteSessionBtn" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out hidden focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
-                    Delete Email Session
+    <div id="sidebar" class="fixed inset-y-0 left-0 z-40 sidebar-glass transform -translate-x-full transition-transform duration-300 ease-in-out" style="width: 320px; z-index: 1050;">
+        <div class="p-4 h-full flex flex-col">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 fw-bold gradient-text mb-0">
+                    <i class="bi bi-menu-app me-2"></i>Menu
+                </h2>
+                <button id="closeSidebarBtn" class="btn glass-button p-2">
+                    <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-
-            <div id="emailInfo" class="mb-6 p-4 bg-slate-50 rounded-lg shadow-inner hidden">
-                <h2 class="text-lg sm:text-xl font-semibold text-slate-700 mb-2">Your Temporary Email:</h2>
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <p class="text-md sm:text-lg text-sky-600 break-all font-medium" id="emailAddress"></p>
-                    <button id="copyEmailBtn" class="mt-2 sm:mt-0 sm:ml-3 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs px-3 py-1 rounded-md transition-colors hidden">Copy</button>
+            
+            <nav class="flex-grow-1">
+                <div class="d-grid gap-3">
+                    <a href="/docs" class="glass-button rounded-xl p-3 text-decoration-none d-flex align-items-center text-contrast">
+                        <i class="bi bi-book me-3 fs-5"></i>
+                        <span class="fw-semibold">API Documentation</span>
+                    </a>
+                    
+                    <div class="glass-card rounded-xl p-3">
+                        <h3 class="h6 fw-bold text-contrast mb-3 d-flex align-items-center">
+                            <i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Features
+                        </h3>
+                        <div class="d-grid gap-2">
+                            <div class="d-flex align-items-center text-contrast-light">
+                                <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                                <small>Multiple Providers</small>
+                            </div>
+                            <div class="d-flex align-items-center text-contrast-light">
+                                <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                                <small>Auto Message Sync</small>
+                            </div>
+                            <div class="d-flex align-items-center text-contrast-light">
+                                <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                                <small>Custom Names</small>
+                            </div>
+                            <div class="d-flex align-items-center text-contrast-light">
+                                <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                                <small>Rush Mode</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p class="text-xs sm:text-sm text-slate-500 mt-2">Session ID: <span id="sessionId" class="font-mono bg-slate-200 px-1 rounded"></span></p>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">Provider: <span id="emailProvider" class="font-mono"></span></p>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">Expires: <span id="emailExpires" class="font-mono">Not specified</span></p>
+            </nav>
+        </div>
+    </div>
+
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-dark bg-opacity-50 transition-opacity duration-300 ease-in-out opacity-0" style="pointer-events: none; z-index: 1040;"></div>
+
+    <div class="min-h-screen d-flex align-items-center justify-content-center p-2 p-md-4">
+        <div class="w-100" style="max-width: 1000px;">
+            <div class="text-center mb-4 mb-md-5 floating-animation">
+                <h1 class="display-4 fw-bold text-white text-shadow mb-3">
+                    <i class="bi bi-envelope-at me-3"></i>BiarMail
+                </h1>
+                <p class="fs-4 fs-md-3 text-white opacity-90 fw-light text-shadow">
+                    Free Disposable Email Service
+                </p>
+                <div class="d-flex justify-content-center mt-3 flex-wrap gap-2">
+                    <span class="badge-custom">
+                        <i class="bi bi-shield-check me-1"></i>Secure
+                    </span>
+                    <span class="badge-custom">
+                        <i class="bi bi-lightning-fill me-1"></i>Fast
+                    </span>
+                    <span class="badge-custom">
+                        <i class="bi bi-heart-fill me-1"></i>Free
+                    </span>
+                </div>
             </div>
 
-            <div id="controlsAndStatusContainer" class="mb-6 text-center">
-                <button id="checkMessagesBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ease-in-out hidden focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75">
-                    Check Messages
-                </button>
-                <div id="loadingMessages" class="text-center my-4 hidden">
-                    <div class="flex items-center justify-center text-slate-600">
-                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500 mr-3"></div>
-                        Loading messages...
+            <div class="glass-card rounded-4 p-3 p-md-5 mb-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="providerSelect" class="form-label text-contrast fw-semibold mb-2">
+                            <i class="bi bi-server me-2"></i>Email Provider
+                        </label>
+                        <select id="providerSelect" class="form-select">
+                            <option value="random">🎲 Random (Recommended)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="rushModeContainer" class="col-md-6 d-none">
+                        <label class="form-label text-contrast fw-semibold mb-2">
+                            <i class="bi bi-rocket-takeoff me-2"></i>Rush Mode
+                        </label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="rushModeToggle" style="font-size: 1.2em;">
+                            <label class="form-check-label text-contrast-light" for="rushModeToggle">
+                                Ultra-fast generation
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-3 mb-4">
+                    <button id="generateEmailBtn" class="btn btn-lg btn-gradient-primary rounded-3 py-3 animate-pulse-glow">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Generate New Email Address
+                    </button>
+                    <button id="deleteSessionBtn" class="btn btn-lg btn-gradient-secondary rounded-3 py-3 d-none">
+                        <i class="bi bi-trash3-fill me-2"></i>Delete Current Session
+                    </button>
+                </div>
+
+                <div id="emailInfo" class="d-none mb-4">
+                    <div class="glass-card rounded-3 p-4 mb-4 border border-primary border-opacity-25">
+                        <h3 class="h5 fw-bold text-contrast mb-3 d-flex align-items-center">
+                            <span class="status-indicator status-active"></span>
+                            <i class="bi bi-envelope-check-fill me-2"></i>Your Temporary Email
+                        </h3>
+                        
+                        <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 mb-3">
+                            <div class="email-address-display flex-grow-1">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-envelope-at me-2"></i>
+                                    <span id="emailAddress" class="fw-bold"></span>
+                                </div>
+                            </div>
+                            <button id="copyEmailBtn" class="btn btn-gradient-success rounded-3 px-4 d-none">
+                                <i class="bi bi-clipboard-fill me-2"></i>Copy
+                            </button>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="feature-highlight rounded-2 p-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-key-fill me-2"></i>
+                                        <small class="fw-semibold">ID:</small>
+                                        <code id="sessionId" class="ms-2 bg-primary bg-opacity-25 px-2 py-1 rounded text-primary fw-bold"></code>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-highlight rounded-2 p-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-server me-2"></i>
+                                        <small class="fw-semibold">Provider:</small>
+                                        <code id="emailProvider" class="ms-2 bg-primary bg-opacity-25 px-2 py-1 rounded text-primary fw-bold"></code>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-highlight rounded-2 p-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-clock-fill me-2"></i>
+                                        <small class="fw-semibold">Expires:</small>
+                                        <code id="emailExpires" class="ms-2 bg-primary bg-opacity-25 px-2 py-1 rounded text-primary fw-bold">Not specified</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="controlsAndStatusContainer" class="text-center mb-4">
+                    <button id="checkMessagesBtn" class="btn btn-gradient-success btn-lg rounded-3 px-5 py-3 d-none">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Check Messages
+                    </button>
+                    
+                    <div id="loadingMessages" class="d-none">
+                        <div class="d-flex align-items-center justify-content-center text-contrast">
+                            <div class="spinner-border spinner-border-sm me-3 text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span class="fw-semibold">Loading messages...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="messagesContainer" class="custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
+                </div>
+            </div>
+
+            <div id="errorDisplay" class="alert alert-danger rounded-3 d-none" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                    <div>
+                        <strong>Error:</strong>
+                        <span id="errorMessage"></span>
                     </div>
                 </div>
             </div>
 
-            <div id="messagesContainer" class="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto custom-scrollbar p-1">
+            <div id="successDisplay" class="alert alert-success rounded-3 d-none" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                    <div>
+                        <strong>Success:</strong>
+                        <span id="successMessage"></span>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div id="errorDisplay" class="mt-6 p-4 bg-red-100 text-red-700 rounded-lg shadow-md hidden">
-            <h3 class="font-semibold text-lg">Error:</h3>
-            <p id="errorMessage" class="text-sm"></p>
-        </div>
-
-        <div id="successDisplay" class="mt-6 p-4 bg-green-100 text-green-700 rounded-lg shadow-md hidden">
-             <h3 class="font-semibold text-lg">Success:</h3>
-            <p id="successMessage" class="text-sm"></p>
-        </div>
-
-        <div id="successCopy" class="fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0">
-            Email copied to clipboard!
         </div>
     </div>
 
+    <div id="successCopy" class="position-fixed bottom-0 end-0 m-3 alert alert-success rounded-3 d-none" style="z-index: 1070;">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-clipboard-check-fill me-2"></i>
+            <span>Email copied to clipboard!</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         const generateEmailBtn = document.getElementById('generateEmailBtn');
         const checkMessagesBtn = document.getElementById('checkMessagesBtn');
         const deleteSessionBtn = document.getElementById('deleteSessionBtn');
         const emailInfoDiv = document.getElementById('emailInfo');
-        const emailAddressP = document.getElementById('emailAddress');
+        const emailAddressSpan = document.getElementById('emailAddress');
         const copyEmailBtn = document.getElementById('copyEmailBtn');
-        const sessionIdP = document.getElementById('sessionId');
-        const emailProviderP = document.getElementById('emailProvider');
-        const emailExpiresP = document.getElementById('emailExpires');
+        const sessionIdSpan = document.getElementById('sessionId');
+        const emailProviderSpan = document.getElementById('emailProvider');
+        const emailExpiresSpan = document.getElementById('emailExpires');
         const messagesContainer = document.getElementById('messagesContainer');
         const errorDisplay = document.getElementById('errorDisplay');
-        const errorMessageP = document.getElementById('errorMessage');
+        const errorMessageSpan = document.getElementById('errorMessage');
         const successDisplay = document.getElementById('successDisplay');
-        const successMessageP = document.getElementById('successMessage');
+        const successMessageSpan = document.getElementById('successMessage');
         const loadingMessages = document.getElementById('loadingMessages');
         const successCopyDiv = document.getElementById('successCopy');
         const providerSelect = document.getElementById('providerSelect');
         const rushModeContainer = document.getElementById('rushModeContainer');
         const rushModeToggle = document.getElementById('rushModeToggle');
 
-        const API_BASE_URL = ''; 
+        const API_BASE_URL = '';
         let currentSessionId = null;
         let currentEmailAddress = null;
         let currentProviderName = null;
         let currentExpiresAt = null;
         let messageCheckInterval = null;
-        
         let clientSideMessages = [];
 
         const LS_SESSION_KEY = 'biarMailSession';
@@ -241,22 +613,30 @@
         async function apiRequest(endpoint, method = 'GET', body = null, params = null, buttonEl = null, loadingEl = null) {
             clearError();
             clearSuccess();
-            let originalButtonText = null;
+            let originalButtonContent = null;
+            
             if (buttonEl) {
-                originalButtonText = buttonEl.innerHTML;
+                originalButtonContent = buttonEl.innerHTML;
                 buttonEl.disabled = true;
-                buttonEl.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div> Processing...`;
+                buttonEl.innerHTML = `
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Processing...
+                `;
             }
-            if (loadingEl) loadingEl.classList.remove('hidden');
+            
+            if (loadingEl) loadingEl.classList.remove('d-none');
 
             const url = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin);
             if (params) {
                 Object.keys(params).forEach(key => {
                     if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
-                         url.searchParams.append(key, params[key]);
+                        url.searchParams.append(key, params[key]);
                     }
                 });
             }
+
             const options = { method, headers: {} };
             if (body) {
                 options.headers['Content-Type'] = 'application/json';
@@ -265,20 +645,21 @@
 
             try {
                 const response = await fetch(url, options);
-                if (response.status === 204) { 
+                if (response.status === 204) {
                     return { success: true, status: 204, data: null };
                 }
+                
                 let responseData;
                 try {
                     responseData = await response.json();
                 } catch (e) {
                     if (response.ok) {
-                         responseData = { detail: "Response was not JSON, but status was OK."};
+                        responseData = { detail: "Response was not JSON, but status was OK." };
                     } else {
                         responseData = { detail: `Server returned non-JSON response with status ${response.status}` };
                     }
                 }
-                
+
                 if (!response.ok) {
                     throw { status: response.status, data: responseData };
                 }
@@ -288,43 +669,58 @@
                 displayError(`Error ${error.status || 'Network'}: ${errorMsg}`);
                 return { success: false, status: error.status, error: error.data || { detail: errorMsg } };
             } finally {
-                if (buttonEl && originalButtonText) {
-                    buttonEl.innerHTML = originalButtonText;
+                if (buttonEl && originalButtonContent) {
+                    buttonEl.innerHTML = originalButtonContent;
                     buttonEl.disabled = false;
                 }
-                if (loadingEl) loadingEl.classList.add('hidden');
+                if (loadingEl) loadingEl.classList.add('d-none');
             }
         }
 
         function displayError(message) {
-            errorMessageP.textContent = message;
-            errorDisplay.classList.remove('hidden');
+            errorMessageSpan.textContent = message;
+            errorDisplay.classList.remove('d-none');
             console.error(message);
+            
+            setTimeout(() => {
+                errorDisplay.classList.add('d-none');
+            }, 5000);
         }
+
         function clearError() {
-            errorDisplay.classList.add('hidden');
-            errorMessageP.textContent = '';
+            errorDisplay.classList.add('d-none');
+            errorMessageSpan.textContent = '';
         }
+
         function displaySuccess(message) {
-            successMessageP.textContent = message;
-            successDisplay.classList.remove('hidden');
+            successMessageSpan.textContent = message;
+            successDisplay.classList.remove('d-none');
+            
+            setTimeout(() => {
+                successDisplay.classList.add('d-none');
+            }, 3000);
         }
+
         function clearSuccess() {
-            successDisplay.classList.add('hidden');
-            successMessageP.textContent = '';
+            successDisplay.classList.add('d-none');
+            successMessageSpan.textContent = '';
         }
 
         function clearMessagesDisplayOnly() {
             messagesContainer.innerHTML = '';
         }
 
-        function showPlaceholderMessage(container, text) {
+        function showPlaceholderMessage(container, text, icon = 'bi-inbox') {
             if (container.querySelectorAll('.message-item').length === 0) {
-                const existingPlaceholder = container.querySelector('p.placeholder-message');
+                const existingPlaceholder = container.querySelector('.placeholder-message');
                 if (existingPlaceholder) existingPlaceholder.remove();
-                const placeholder = document.createElement('p');
-                placeholder.className = 'text-center text-slate-500 py-4 placeholder-message';
-                placeholder.textContent = text;
+                
+                const placeholder = document.createElement('div');
+                placeholder.className = 'text-center py-5 placeholder-message';
+                placeholder.innerHTML = `
+                    <i class="bi ${icon} display-1 text-primary opacity-50 mb-3"></i>
+                    <p class="text-contrast fs-5 fw-semibold">${text}</p>
+                `;
                 container.appendChild(placeholder);
             }
         }
@@ -351,15 +747,17 @@
             if (!sessionId) return [];
             const storedMessagesStr = localStorage.getItem(`${LS_MESSAGES_PREFIX}${sessionId}`);
             if (storedMessagesStr) {
-                try { return JSON.parse(storedMessagesStr); }
-                catch (e) {
+                try {
+                    return JSON.parse(storedMessagesStr);
+                } catch (e) {
                     console.error("Error parsing stored client messages:", e);
-                    localStorage.removeItem(`${LS_MESSAGES_PREFIX}${sessionId}`); return [];
+                    localStorage.removeItem(`${LS_MESSAGES_PREFIX}${sessionId}`);
+                    return [];
                 }
             }
             return [];
         }
-        
+
         function clearClientSideDataForSession(sessionId) {
             if (sessionId) {
                 localStorage.removeItem(`${LS_MESSAGES_PREFIX}${sessionId}`);
@@ -367,16 +765,16 @@
             clientSideMessages = [];
             clearMessagesDisplayOnly();
         }
-        
+
         function renderClientMessages() {
             clearMessagesDisplayOnly();
             if (clientSideMessages.length === 0) {
-                showPlaceholderMessage(messagesContainer, 'No messages in inbox.');
+                showPlaceholderMessage(messagesContainer, 'No messages in your inbox yet.', 'bi-envelope');
             } else {
                 clientSideMessages.sort((a, b) => {
                     const dateA = a.date ? new Date(a.date).getTime() : 0;
                     const dateB = b.date ? new Date(b.date).getTime() : 0;
-                    return dateB - dateA; 
+                    return dateB - dateA;
                 });
                 clientSideMessages.forEach(msg => renderMessageDOM(msg));
             }
@@ -390,31 +788,34 @@
                     if (sessionData.sessionId && sessionData.emailAddress && sessionData.provider) {
                         if (sessionData.expiresAt && new Date(sessionData.expiresAt) < new Date()) {
                             console.log("Session expired, clearing from localStorage.");
-                            clearSessionFromLocalStorage(); 
-                            clearClientSideDataForSession(sessionData.sessionId); 
+                            clearSessionFromLocalStorage();
+                            clearClientSideDataForSession(sessionData.sessionId);
                             return false;
                         }
                         currentSessionId = sessionData.sessionId;
                         currentEmailAddress = sessionData.emailAddress;
                         currentProviderName = sessionData.provider;
-                        currentExpiresAt = sessionData.expiresAt; 
+                        currentExpiresAt = sessionData.expiresAt;
                         updateSessionUI();
-                        
+
                         clientSideMessages = loadClientSideMessagesFromLocalStorage(currentSessionId);
                         renderClientMessages();
-                        
+
                         if (messageCheckInterval) clearInterval(messageCheckInterval);
-                        messageCheckInterval = setInterval(checkMessages, 15000); 
-                        checkMessages(true); 
+                        messageCheckInterval = setInterval(checkMessages, 15000);
+                        checkMessages(true);
                         return true;
-                    } else { 
-                        clearSessionFromLocalStorage(); 
-                        if(sessionData.sessionId) clearClientSideDataForSession(sessionData.sessionId); 
+                    } else {
+                        clearSessionFromLocalStorage();
+                        if (sessionData.sessionId) clearClientSideDataForSession(sessionData.sessionId);
                     }
                 } catch (e) {
-                    console.error("Error parsing session data from localStorage:", e); 
+                    console.error("Error parsing session data from localStorage:", e);
                     clearSessionFromLocalStorage();
-                    try { const temp = JSON.parse(savedSession); if(temp.sessionId) clearClientSideDataForSession(temp.sessionId); } catch {}
+                    try {
+                        const temp = JSON.parse(savedSession);
+                        if (temp.sessionId) clearClientSideDataForSession(temp.sessionId);
+                    } catch {}
                 }
             }
             return false;
@@ -425,32 +826,34 @@
         }
 
         function updateSessionUI() {
-            emailAddressP.textContent = currentEmailAddress;
-            sessionIdP.textContent = currentSessionId;
-            emailProviderP.textContent = currentProviderName;
-            emailExpiresP.textContent = currentExpiresAt ? new Date(currentExpiresAt).toLocaleString() : 'Not specified';
-            emailInfoDiv.classList.remove('hidden');
-            checkMessagesBtn.classList.remove('hidden');
-            deleteSessionBtn.classList.remove('hidden');
-            copyEmailBtn.classList.remove('hidden');
+            emailAddressSpan.textContent = currentEmailAddress;
+            sessionIdSpan.textContent = currentSessionId.substring(0, 8) + '...';
+            emailProviderSpan.textContent = currentProviderName;
+            emailExpiresSpan.textContent = currentExpiresAt ? new Date(currentExpiresAt).toLocaleString() : 'Not specified';
             
+            emailInfoDiv.classList.remove('d-none');
+            checkMessagesBtn.classList.remove('d-none');
+            deleteSessionBtn.classList.remove('d-none');
+            copyEmailBtn.classList.remove('d-none');
+
             if (providerSelect.options.length > 1) {
                 providerSelect.value = currentProviderName;
             } else {
-                 setTimeout(() => { if (providerSelect.options.length > 1) providerSelect.value = currentProviderName; }, 500);
+                setTimeout(() => {
+                    if (providerSelect.options.length > 1) providerSelect.value = currentProviderName;
+                }, 500);
             }
+            
             if (currentProviderName === 'tempmail.lol') {
-                rushModeContainer.classList.remove('hidden');
-                rushModeContainer.classList.add('flex'); 
+                rushModeContainer.classList.remove('d-none');
             } else {
-                rushModeContainer.classList.add('hidden');
-                rushModeContainer.classList.remove('flex');
+                rushModeContainer.classList.add('d-none');
             }
         }
 
         async function generateEmail() {
             clearError();
-            if (currentSessionId) clearClientSideDataForSession(currentSessionId); 
+            if (currentSessionId) clearClientSideDataForSession(currentSessionId);
             if (messageCheckInterval) clearInterval(messageCheckInterval);
 
             const selectedProvider = providerSelect.value;
@@ -458,7 +861,7 @@
             if (selectedProvider && selectedProvider !== "random") {
                 urlParams.provider = selectedProvider;
             }
-            if (selectedProvider === 'tempmail.lol') { 
+            if (selectedProvider === 'tempmail.lol') {
                 urlParams.rush_mode = rushModeToggle.checked;
             }
 
@@ -468,14 +871,14 @@
                 currentSessionId = result.data.api_session_id;
                 currentEmailAddress = result.data.email_address;
                 currentProviderName = result.data.provider;
-                currentExpiresAt = result.data.expires_at; 
-                
-                clientSideMessages = []; 
+                currentExpiresAt = result.data.expires_at;
+
+                clientSideMessages = [];
                 updateSessionUI();
                 saveSessionToLocalStorage();
-                saveClientSideMessagesToLocalStorage(currentSessionId); 
-                renderClientMessages(); 
-                
+                saveClientSideMessagesToLocalStorage(currentSessionId);
+                renderClientMessages();
+
                 if (messageCheckInterval) clearInterval(messageCheckInterval);
                 messageCheckInterval = setInterval(checkMessages, 15000);
             }
@@ -483,27 +886,31 @@
 
         async function checkMessages(isManualClick = false) {
             if (!currentSessionId) {
-                if(isManualClick) displayError('No active email session.'); return;
+                if (isManualClick) displayError('No active email session.');
+                return;
             }
-            if(isManualClick) clearError();
+            if (isManualClick) clearError();
 
             const result = await apiRequest(`/sessions/${currentSessionId}/messages`, 'GET', null, null, isManualClick ? checkMessagesBtn : null, isManualClick ? loadingMessages : null);
 
             if (result.success && result.data) {
-                clientSideMessages = result.data; 
+                clientSideMessages = result.data;
                 renderClientMessages();
-                saveClientSideMessagesToLocalStorage(currentSessionId); 
-
-            } else if (result.status === 404) { 
+                saveClientSideMessagesToLocalStorage(currentSessionId);
+            } else if (result.status === 404) {
                 if (messageCheckInterval) clearInterval(messageCheckInterval);
                 clearClientSideDataForSession(currentSessionId);
-                currentSessionId = null; currentEmailAddress = null; currentProviderName = null; currentExpiresAt = null;
-                emailInfoDiv.classList.add('hidden'); checkMessagesBtn.classList.add('hidden');
-                deleteSessionBtn.classList.add('hidden'); copyEmailBtn.classList.add('hidden');
+                currentSessionId = null;
+                currentEmailAddress = null;
+                currentProviderName = null;
+                currentExpiresAt = null;
+                emailInfoDiv.classList.add('d-none');
+                checkMessagesBtn.classList.add('d-none');
+                deleteSessionBtn.classList.add('d-none');
+                copyEmailBtn.classList.add('d-none');
                 clearSessionFromLocalStorage();
-                renderClientMessages(); 
-                if(isManualClick) displayError(result.error?.detail || 'Session not found on server. Local messages cleared.');
-            } else if (isManualClick && !result.success) {
+                renderClientMessages();
+                if (isManualClick) displayError(result.error?.detail || 'Session not found on server. Local messages cleared.');
             }
         }
 
@@ -519,69 +926,113 @@
 
         function renderMessageDOM(message) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'bg-white p-3 sm:p-4 rounded-lg shadow-md message-bubble message-item hover:shadow-lg transition-shadow duration-200';
+            messageDiv.className = 'message-card rounded-3 p-4 mb-4 message-item';
             messageDiv.dataset.messageId = message.id;
 
             let fromDisplay = escapeHTML(message.from || 'Unknown Sender');
             if (!message.from && message.raw && typeof message.raw.od === 'string' && message.raw.od.trim() !== '') {
                 fromDisplay = escapeHTML(message.raw.od);
             }
-            
+
             const subjectText = escapeHTML(message.subject || '(No Subject)');
             const dateText = escapeHTML(message.date ? new Date(message.date).toLocaleString() : 'Unknown Date');
-            const bodyText = escapeHTML(message.body || '(No text body)');
+            let bodyText = '';
             
-            const deleteBtnId = `delete-msg-${message.id.replace(/[^a-zA-Z0-9-_]/g, '')}`; 
+            if (message.body && typeof message.body === 'string' && message.body.trim() !== '') {
+                bodyText = message.body.trim();
+            } else {
+                bodyText = '(No message content available)';
+            }
+            
+            const deleteBtnId = `delete-msg-${message.id.replace(/[^a-zA-Z0-9-_]/g, '')}`;
+            const contentId = `content-${message.id.replace(/[^a-zA-Z0-9-_]/g, '')}`;
+            const toggleBtnId = `toggle-${message.id.replace(/[^a-zA-Z0-9-_]/g, '')}`;
 
             messageDiv.innerHTML = `
-                <div class="flex justify-between items-start border-b border-slate-200 pb-2 mb-2">
-                    <div>
-                        <p class="text-xs sm:text-sm font-semibold text-sky-700">From: <span class="font-normal text-slate-600">${fromDisplay}</span></p>
-                        <p class="text-xs sm:text-sm font-semibold text-sky-700">Subject: <span class="font-normal text-slate-600">${subjectText}</span></p>
-                        <p class="text-xs text-slate-400 mt-1">Date: ${dateText}</p>
+                <div class="d-flex justify-content-between align-items-start border-bottom border-primary border-opacity-25 pb-3 mb-3">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-person-circle me-2 text-primary fs-5"></i>
+                            <span class="fw-bold text-contrast">${fromDisplay}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-chat-square-text me-2 text-success fs-5"></i>
+                            <span class="text-contrast fw-semibold">${subjectText}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-clock me-2 text-warning"></i>
+                            <small class="text-contrast-light fw-medium">${dateText}</small>
+                        </div>
                     </div>
-                    <button id="${deleteBtnId}" data-message-id-to-delete="${message.id}" class="delete-message-btn text-red-500 hover:text-red-700 text-xs p-1 ml-2 focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                        </svg>
+                    <button id="${deleteBtnId}" data-message-id-to-delete="${message.id}" class="delete-message-btn btn btn-gradient-danger btn-sm rounded-2">
+                        <i class="bi bi-trash3"></i>
                     </button>
                 </div>
-                <details class="group">
-                    <summary class="text-xs sm:text-sm text-sky-600 hover:text-sky-700 cursor-pointer list-none group-open:mb-2">
-                        <span class="group-open:hidden">Show Details ▼</span>
-                        <span class="hidden group-open:inline">Hide Details ▲</span>
-                    </summary>
-                    <div class="prose prose-sm max-w-none message-body-text bg-slate-50 p-2 sm:p-3 rounded-md overflow-x-auto custom-scrollbar">
-                        <p class="font-medium text-slate-700 text-sm">Body:</p>
-                        <pre class="whitespace-pre-wrap text-xs sm:text-sm">${bodyText}</pre>
+                
+                <div class="mt-3">
+                    <button id="${toggleBtnId}" class="btn btn-outline-primary btn-sm rounded-2 w-100 mb-3" type="button">
+                        <i class="bi bi-chevron-down me-2"></i>Show Message Content
+                    </button>
+                    
+                    <div id="${contentId}" style="display: none;">
+                        <div class="border border-primary border-opacity-25 rounded-3 p-4 bg-white">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-file-text me-2 text-black"></i>
+                                <h6 class="mb-0 fw-bold text-black">Message Content:</h6>
+                            </div>
+                            <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.6; color: #000000; white-space: pre-wrap; word-wrap: break-word; min-height: 100px; max-height: 400px; overflow-y: auto;">${escapeHTML(bodyText)}</div>
+                        </div>
                     </div>
-                </details>
+                </div>
             `;
 
-            if (message.html) {
+            if (message.html && message.html !== null && message.html !== '') {
                 const rawHtml = Array.isArray(message.html) ? message.html.join('') : String(message.html);
-                const iframeContainer = document.createElement('div');
-                iframeContainer.className = 'mt-2 message-body-html';
-                const pTag = document.createElement('p');
-                pTag.className = 'font-medium text-slate-700 mb-1 text-sm';
-                pTag.textContent = 'HTML View:';
-                const iframe = document.createElement('iframe');
-                iframe.sandbox = 'allow-same-origin'; 
-                iframe.srcdoc = rawHtml;
-                iframeContainer.appendChild(pTag);
-                iframeContainer.appendChild(iframe);
-                const detailsElement = messageDiv.querySelector('details.group');
-                if (detailsElement) detailsElement.appendChild(iframeContainer);
+                if (rawHtml.trim()) {
+                    const htmlContainer = document.createElement('div');
+                    htmlContainer.className = 'mt-3 border border-success border-opacity-25 rounded-3 p-4 bg-white';
+                    htmlContainer.innerHTML = `
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-code-slash me-2 text-black"></i>
+                            <h6 class="mb-0 fw-bold text-black">HTML Preview:</h6>
+                        </div>
+                        <div style="border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+                            <iframe sandbox="allow-same-origin" srcdoc="${escapeHTML(rawHtml)}" style="width: 100%; min-height: 300px; border: none;"></iframe>
+                        </div>
+                    `;
+                    const contentDiv = messageDiv.querySelector(`#${contentId}`);
+                    if (contentDiv) {
+                        contentDiv.appendChild(htmlContainer);
+                    }
+                }
             }
+
             messagesContainer.appendChild(messageDiv);
-            
+
             const deleteButton = messageDiv.querySelector(`#${deleteBtnId}`);
-            if(deleteButton) {
+            if (deleteButton) {
                 deleteButton.addEventListener('click', handleDeleteMessage);
             }
+
+            const toggleButton = messageDiv.querySelector(`#${toggleBtnId}`);
+            const contentElement = messageDiv.querySelector(`#${contentId}`);
+            
+            if (toggleButton && contentElement) {
+                toggleButton.addEventListener('click', function() {
+                    if (contentElement.style.display === 'none') {
+                        contentElement.style.display = 'block';
+                        toggleButton.innerHTML = '<i class="bi bi-chevron-up me-2"></i>Hide Message Content';
+                        console.log('Showing content for message:', message.id);
+                        console.log('Content text:', bodyText);
+                    } else {
+                        contentElement.style.display = 'none';
+                        toggleButton.innerHTML = '<i class="bi bi-chevron-down me-2"></i>Show Message Content';
+                        console.log('Hiding content for message:', message.id);
+                    }
+                });
+            }
         }
-        
+
         async function handleDeleteMessage(event) {
             const messageIdToDelete = event.currentTarget.dataset.messageIdToDelete;
             if (!currentSessionId || !messageIdToDelete) return;
@@ -590,66 +1041,90 @@
 
             if (result.success) {
                 clientSideMessages = clientSideMessages.filter(msg => msg.id !== messageIdToDelete);
-                saveClientSideMessagesToLocalStorage(currentSessionId); 
-                renderClientMessages(); 
-                displaySuccess(`Message (ID: ${messageIdToDelete.substring(0,8)}...) deleted.`);
+                saveClientSideMessagesToLocalStorage(currentSessionId);
+                renderClientMessages();
+                displaySuccess(`Message deleted successfully.`);
             } else {
-                displayError(`Failed to delete message (ID: ${messageIdToDelete.substring(0,8)}...). It might have already been removed or an error occurred.`);
+                displayError(`Failed to delete message. It might have already been removed or an error occurred.`);
             }
         }
 
         async function deleteSession() {
-            if (!currentSessionId) { displayError('No active email session to delete.'); return; }
+            if (!currentSessionId) {
+                displayError('No active email session to delete.');
+                return;
+            }
             if (messageCheckInterval) clearInterval(messageCheckInterval);
             clearError();
+            
             const result = await apiRequest(`/sessions/${currentSessionId}`, 'DELETE', null, null, deleteSessionBtn);
 
             if (result.success) {
-                clearClientSideDataForSession(currentSessionId); 
-                currentSessionId = null; currentEmailAddress = null; currentProviderName = null; currentExpiresAt = null;
-                emailInfoDiv.classList.add('hidden'); checkMessagesBtn.classList.add('hidden');
-                deleteSessionBtn.classList.add('hidden'); copyEmailBtn.classList.add('hidden');
+                clearClientSideDataForSession(currentSessionId);
+                currentSessionId = null;
+                currentEmailAddress = null;
+                currentProviderName = null;
+                currentExpiresAt = null;
+                emailInfoDiv.classList.add('d-none');
+                checkMessagesBtn.classList.add('d-none');
+                deleteSessionBtn.classList.add('d-none');
+                copyEmailBtn.classList.add('d-none');
                 clearSessionFromLocalStorage();
-                renderClientMessages(); 
-                emailAddressP.textContent = ''; sessionIdP.textContent = '';
-                emailProviderP.textContent = ''; emailExpiresP.textContent = 'Not specified';
+                renderClientMessages();
+                emailAddressSpan.textContent = '';
+                sessionIdSpan.textContent = '';
+                emailProviderSpan.textContent = '';
+                emailExpiresSpan.textContent = 'Not specified';
+                rushModeContainer.classList.add('d-none');
                 displaySuccess('Session deleted successfully.');
-                rushModeContainer.classList.add('hidden');
-                rushModeContainer.classList.remove('flex');
             }
         }
 
         async function fetchInitialProviders() {
             try {
-                const result = await apiRequest('/providers'); 
+                const result = await apiRequest('/providers');
                 if (result.success && result.data) {
                     result.data.forEach(provider => {
                         const option = document.createElement('option');
-                        option.value = provider; option.textContent = provider;
+                        option.value = provider;
+                        
+                        const providerIcons = {
+                            'guerrillamail': '🛡️',
+                            'mail.tm': '📧',
+                            'mail.gw': '🌐',
+                            'tempmail.lol': '⚡',
+                            'dropmail.me': '💧',
+                            'disposablemail': '🗑️'
+                        };
+                        
+                        option.textContent = `${providerIcons[provider] || '📮'} ${provider}`;
                         providerSelect.appendChild(option);
                     });
                 } else {
-                     console.error('Failed to fetch providers:', result.error?.detail || 'Unknown error');
+                    console.error('Failed to fetch providers:', result.error?.detail || 'Unknown error');
                 }
-            } catch (error) { console.error('Error fetching providers:', error); }
+            } catch (error) {
+                console.error('Error fetching providers:', error);
+            }
         }
 
         providerSelect.addEventListener('change', (event) => {
             if (event.target.value === 'tempmail.lol') {
-                rushModeContainer.classList.remove('hidden');
-                rushModeContainer.classList.add('flex');
+                rushModeContainer.classList.remove('d-none');
             } else {
-                rushModeContainer.classList.add('hidden');
-                rushModeContainer.classList.remove('flex');
+                rushModeContainer.classList.add('d-none');
             }
         });
 
         copyEmailBtn.addEventListener('click', () => {
             if (currentEmailAddress) {
                 navigator.clipboard.writeText(currentEmailAddress).then(() => {
-                    successCopyDiv.classList.remove('opacity-0');
-                    setTimeout(() => successCopyDiv.classList.add('opacity-0'), 2000);
-                }).catch(err => { console.error('Failed to copy email: ', err); displayError('Failed to copy email.'); });
+                    successCopyDiv.classList.remove('d-none');
+                    setTimeout(() => successCopyDiv.classList.add('d-none'), 3000);
+                }).catch(err => {
+                    console.error('Failed to copy email: ', err);
+                    displayError('Failed to copy email.');
+                });
             }
         });
 
@@ -666,30 +1141,28 @@
             const isOpen = sidebar.classList.contains('translate-x-0');
             sidebar.classList.toggle('translate-x-0', !isOpen);
             sidebar.classList.toggle('-translate-x-full', isOpen);
-            
-            sidebarToggle.classList.toggle('opacity-0', !isOpen); 
-            sidebarToggle.classList.toggle('pointer-events-none', !isOpen); 
-            
+
+            sidebarToggle.style.opacity = isOpen ? '1' : '0.7';
+            sidebarToggle.style.pointerEvents = isOpen ? 'auto' : 'auto';
+
             sidebarBackdrop.classList.toggle('opacity-0', isOpen);
-            sidebarBackdrop.classList.toggle('pointer-events-none', isOpen);
-            document.body.classList.toggle('overflow-hidden', !isOpen); 
+            sidebarBackdrop.style.pointerEvents = isOpen ? 'none' : 'auto';
+            document.body.style.overflow = isOpen ? 'auto' : 'hidden';
         }
 
         sidebarToggle.addEventListener('click', toggleSidebar);
         closeSidebarBtn.addEventListener('click', toggleSidebar);
-        sidebarBackdrop.addEventListener('click', toggleSidebar); 
+        sidebarBackdrop.addEventListener('click', toggleSidebar);
 
         document.addEventListener('DOMContentLoaded', async () => {
             await fetchInitialProviders();
             if (!loadSessionFromLocalStorage()) {
-                showPlaceholderMessage(messagesContainer, 'Generate an email to get started.');
+                showPlaceholderMessage(messagesContainer, 'Generate an email address to get started!', 'bi-rocket-takeoff');
             }
             if (currentProviderName === 'tempmail.lol') {
-                rushModeContainer.classList.remove('hidden');
-                rushModeContainer.classList.add('flex');
+                rushModeContainer.classList.remove('d-none');
             } else {
-                rushModeContainer.classList.add('hidden');
-                rushModeContainer.classList.remove('flex');
+                rushModeContainer.classList.add('d-none');
             }
         });
     </script>

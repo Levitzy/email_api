@@ -76,8 +76,8 @@ async def _fetch_internal_mail_tm_gw_like_messages(
     provider_data: Dict[str, Any],
     provider_name: str,
     sess: requests.Session,
-    active_sessions_ref: Dict[str, Any],
-    save_sessions_func: callable,
+    active_sessions_ref: Dict[str, Any] = None,
+    save_sessions_func: callable = None,
 ) -> List[Dict[str, Any]]:
     base_url = provider_data["base_url"]
     auth_token = provider_data["auth_token"]
@@ -108,15 +108,16 @@ async def _fetch_internal_mail_tm_gw_like_messages(
                     )
 
                 provider_data["auth_token"] = new_auth_token
-                api_session_id_for_update = provider_data.get("api_session_id")
-                if (
-                    api_session_id_for_update
-                    and api_session_id_for_update in active_sessions_ref
-                ):
-                    active_sessions_ref[api_session_id_for_update][
-                        "provider_specific_data"
-                    ]["auth_token"] = new_auth_token
-                    save_sessions_func()
+                if active_sessions_ref and save_sessions_func:
+                    api_session_id_for_update = provider_data.get("api_session_id")
+                    if (
+                        api_session_id_for_update
+                        and api_session_id_for_update in active_sessions_ref
+                    ):
+                        active_sessions_ref[api_session_id_for_update][
+                            "provider_specific_data"
+                        ]["auth_token"] = new_auth_token
+                        save_sessions_func()
 
                 headers = {"Authorization": f"Bearer {new_auth_token}"}
                 await asyncio.sleep(0.5)
@@ -204,8 +205,8 @@ async def setup_mail_gw(**kwargs) -> Tuple[str, str, Dict[str, Any]]:
 
 async def fetch_mail_gw_messages(
     provider_data: Dict[str, Any],
-    active_sessions_ref: Dict[str, Any],
-    save_sessions_func: callable,
+    active_sessions_ref: Dict[str, Any] = None,
+    save_sessions_func: callable = None,
 ) -> List[Dict[str, Any]]:
     sess = make_requests_session()
     return await _fetch_internal_mail_tm_gw_like_messages(

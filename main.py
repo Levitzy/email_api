@@ -215,7 +215,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Temp Mail API",
     description="API for temporary emails.",
-    version="1.6.7",
+    version="1.7.3",
     docs_url=None,
     redoc_url=None,
     lifespan=lifespan,
