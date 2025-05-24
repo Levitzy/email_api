@@ -30,9 +30,9 @@ from provider.tempmaillol_provider import (
     fetch_tempmail_lol_messages,
 )
 from provider.dropmailme_provider import setup_dropmail_me, fetch_dropmail_me_messages
-from provider.disposableemail_provider import (
-    setup_disposablemail,
-    fetch_disposablemail_messages,
+from provider.tempmail_org_provider import (
+    setup_tempmail_org,
+    fetch_tempmail_org_messages,
 )
 
 
@@ -187,7 +187,7 @@ PROVIDER_SETUP_FUNCTIONS: Dict[
     "mail.gw": setup_mail_gw,
     "tempmail.lol": setup_tempmail_lol,
     "dropmail.me": setup_dropmail_me,
-    "disposablemail": setup_disposablemail,
+    "temp-mail.org": setup_tempmail_org,
 }
 
 PROVIDER_FETCH_FUNCTIONS: Dict[
@@ -202,7 +202,7 @@ PROVIDER_FETCH_FUNCTIONS: Dict[
     "mail.gw": fetch_mail_gw_messages,
     "tempmail.lol": fetch_tempmail_lol_messages,
     "dropmail.me": fetch_dropmail_me_messages,
-    "disposablemail": fetch_disposablemail_messages,
+    "temp-mail.org": fetch_tempmail_org_messages,
 }
 
 
@@ -215,7 +215,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Temp Mail API",
     description="API for temporary emails.",
-    version="1.7.3",
+    version="1.8.0",
     docs_url=None,
     redoc_url=None,
     lifespan=lifespan,

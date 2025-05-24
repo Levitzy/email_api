@@ -8,187 +8,37 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            --gradient-secondary: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%);
-            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            --gradient-dark: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-            --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.4);
-            --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            --shadow-button: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
-        }
-
-        * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
         body {
-            background: var(--gradient-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.2) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: var(--shadow-card);
-            color: #1f2937;
-        }
-
-        .glass-card-dark {
-            background: rgba(31, 41, 55, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: var(--shadow-card);
-            color: #f9fafb;
-        }
-
-        .glass-button {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            color: #1f2937;
-        }
-
-        .glass-button:hover {
-            background: rgba(255, 255, 255, 1);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-button);
-            color: #1f2937;
-        }
-
-        .glass-button-dark {
-            background: rgba(31, 41, 55, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            color: #f9fafb;
-        }
-
-        .glass-button-dark:hover {
-            background: rgba(31, 41, 55, 0.9);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-button);
-            color: #f9fafb;
-        }
-
-        .gradient-text {
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .text-shadow {
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-gradient-primary {
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-gradient-primary:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-button);
-        }
-
-        .btn-gradient-secondary {
-            background: var(--gradient-secondary);
-            color: white;
-            border: none;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-gradient-secondary:hover {
-            background: linear-gradient(135deg, #db2777 0%, #f59e0b 100%);
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .btn-gradient-success {
-            background: var(--gradient-success);
-            color: white;
-            border: none;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-gradient-success:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .btn-gradient-danger {
-            background: var(--gradient-danger);
-            color: white;
-            border: none;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-gradient-danger:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .message-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #1f2937;
-        }
-
-        .message-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            background: rgba(255, 255, 255, 1);
-        }
-
-        .email-address-display {
-            font-family: 'JetBrains Mono', monospace;
-            background: rgba(59, 130, 246, 0.1);
-            border: 2px solid rgba(59, 130, 246, 0.3);
+        .main-card {
+            background: white;
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .email-display {
+            font-family: 'Monaco', 'Consolas', monospace;
+            background: #f1f5f9;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
             padding: 1rem;
             word-break: break-all;
-            color: #1e40af;
+            color: #1e293b;
             font-weight: 600;
         }
 
@@ -198,378 +48,391 @@
             border-radius: 50%;
             display: inline-block;
             margin-right: 8px;
-        }
-
-        .status-active {
             background: #10b981;
             animation: pulse 2s infinite;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
         }
 
-        .status-expired {
-            background: #ef4444;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
-        .sidebar-glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.3);
+        .message-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.2s ease;
         }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
+        .message-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(59, 130, 246, 0.1);
-            border-radius: 10px;
+        .btn-primary {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            font-weight: 500;
         }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(59, 130, 246, 0.6);
-            border-radius: 10px;
+        .btn-primary:hover {
+            background-color: #2563eb;
+            border-color: #2563eb;
         }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(59, 130, 246, 0.8);
+        .btn-success {
+            background-color: #10b981;
+            border-color: #10b981;
         }
 
-        .floating-animation {
-            animation: floating 6s ease-in-out infinite;
+        .btn-success:hover {
+            background-color: #059669;
+            border-color: #059669;
         }
 
-        @keyframes floating {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+        .btn-danger {
+            background-color: #ef4444;
+            border-color: #ef4444;
         }
 
-        .animate-pulse-glow {
-            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .btn-danger:hover {
+            background-color: #dc2626;
+            border-color: #dc2626;
         }
 
-        @keyframes pulse-glow {
-            0%, 100% {
-                opacity: 1;
-                box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-            }
-            50% {
-                opacity: 0.9;
-                box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
-            }
+        .btn-outline-primary {
+            color: #3b82f6;
+            border-color: #3b82f6;
         }
 
-        .feature-highlight {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            color: #1e40af;
-        }
-
-        @media (max-width: 576px) {
-            .floating-animation {
-                animation: none;
-            }
-            
-            .glass-card {
-                margin: 0.5rem;
-                padding: 1rem !important;
-            }
-            
-            .btn {
-                font-size: 0.9rem;
-                padding: 0.75rem 1rem;
-            }
-            
-            .display-1 {
-                font-size: 2.5rem;
-            }
-            
-            h1 {
-                font-size: 2.5rem !important;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar-glass {
-                width: 90vw !important;
-            }
+        .btn-outline-primary:hover {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
         }
 
         .form-control, .form-select {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 2px solid rgba(59, 130, 246, 0.2);
-            color: #1f2937;
-            font-weight: 500;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            padding: 0.75rem;
         }
 
         .form-control:focus, .form-select:focus {
-            background: rgba(255, 255, 255, 1);
             border-color: #3b82f6;
             box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
-            color: #1f2937;
         }
 
         .alert {
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            border: 1px solid;
         }
 
-        .accordion-button {
-            background: rgba(59, 130, 246, 0.1) !important;
-            color: #1e40af !important;
-            font-weight: 600;
-            border: none;
+        .alert-danger {
+            background-color: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
         }
 
-        .accordion-button:not(.collapsed) {
-            background: rgba(59, 130, 246, 0.2) !important;
-            color: #1e40af !important;
+        .alert-success {
+            background-color: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #059669;
         }
 
-        .accordion-button:focus {
-            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .text-contrast {
-            color: #1f2937 !important;
-            font-weight: 600;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
         }
 
-        .text-contrast-light {
-            color: #6b7280 !important;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1060;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 300px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1050;
+            overflow-y: auto;
+        }
+
+        .sidebar.show {
+            transform: translateX(0);
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .sidebar-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 90vw;
+            }
+            
+            .main-content {
+                margin: 4rem 0.5rem 2rem;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .main-content {
+                margin: 4rem 2rem 2rem;
+            }
+        }
+
+        .feature-badge {
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 0.75rem;
             font-weight: 500;
-        }
-
-        .badge-custom {
-            background: rgba(59, 130, 246, 0.2);
-            color: #1e40af;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-        }
-
-        .message-content-visible {
-            background: #ffffff !important;
-            border: 2px solid #e5e7eb !important;
-            border-radius: 8px !important;
-            padding: 1rem !important;
-            font-family: 'JetBrains Mono', monospace !important;
-            font-size: 0.9rem !important;
-            line-height: 1.6 !important;
-            color: #000000 !important;
-            white-space: pre-wrap !important;
-            word-wrap: break-word !important;
-            max-height: 400px !important;
-            overflow-y: auto !important;
-            display: block !important;
-            visibility: visible !important;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid #e2e8f0;
         }
     </style>
 </head>
-<body class="min-h-screen relative">
-    <button id="sidebarToggle" class="fixed top-4 left-4 z-50 glass-button p-3 rounded-xl transition-all duration-300" style="z-index: 1060;">
+<body>
+    <button id="sidebarToggle" class="btn sidebar-toggle">
         <i class="bi bi-list fs-5"></i>
     </button>
 
-    <div id="sidebar" class="fixed inset-y-0 left-0 z-40 sidebar-glass transform -translate-x-full transition-transform duration-300 ease-in-out" style="width: 320px; z-index: 1050;">
-        <div class="p-4 h-full flex flex-col">
+    <div id="sidebar" class="sidebar">
+        <div class="p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="h4 fw-bold gradient-text mb-0">
+                <h2 class="h5 mb-0 fw-semibold text-slate-700">
                     <i class="bi bi-menu-app me-2"></i>Menu
                 </h2>
-                <button id="closeSidebarBtn" class="btn glass-button p-2">
+                <button id="closeSidebar" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
             
-            <nav class="flex-grow-1">
-                <div class="d-grid gap-3">
-                    <a href="/docs" class="glass-button rounded-xl p-3 text-decoration-none d-flex align-items-center text-contrast">
-                        <i class="bi bi-book me-3 fs-5"></i>
-                        <span class="fw-semibold">API Documentation</span>
-                    </a>
-                    
-                    <div class="glass-card rounded-xl p-3">
-                        <h3 class="h6 fw-bold text-contrast mb-3 d-flex align-items-center">
-                            <i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Features
-                        </h3>
-                        <div class="d-grid gap-2">
-                            <div class="d-flex align-items-center text-contrast-light">
-                                <i class="bi bi-check-circle-fill me-2 text-success"></i>
-                                <small>Multiple Providers</small>
-                            </div>
-                            <div class="d-flex align-items-center text-contrast-light">
-                                <i class="bi bi-check-circle-fill me-2 text-success"></i>
-                                <small>Auto Message Sync</small>
-                            </div>
-                            <div class="d-flex align-items-center text-contrast-light">
-                                <i class="bi bi-check-circle-fill me-2 text-success"></i>
-                                <small>Custom Names</small>
-                            </div>
-                            <div class="d-flex align-items-center text-contrast-light">
-                                <i class="bi bi-check-circle-fill me-2 text-success"></i>
-                                <small>Rush Mode</small>
-                            </div>
+            <div class="d-grid gap-3">
+                <a href="/docs" class="btn btn-outline-primary text-decoration-none">
+                    <i class="bi bi-book me-2"></i>API Documentation
+                </a>
+                
+                <div class="sidebar-card p-3">
+                    <h3 class="h6 fw-semibold mb-3">
+                        <i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Features
+                    </h3>
+                    <div class="d-grid gap-2">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                            <small>Multiple Providers</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                            <small>Auto Message Sync</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                            <small>Rush Mode Support</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                            <small>Session Management</small>
                         </div>
                     </div>
                 </div>
-            </nav>
+            </div>
         </div>
     </div>
 
-    <div id="sidebarBackdrop" class="fixed inset-0 bg-dark bg-opacity-50 transition-opacity duration-300 ease-in-out opacity-0" style="pointer-events: none; z-index: 1040;"></div>
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
-    <div class="min-h-screen d-flex align-items-center justify-content-center p-2 p-md-4">
-        <div class="w-100" style="max-width: 1000px;">
-            <div class="text-center mb-4 mb-md-5 floating-animation">
-                <h1 class="display-4 fw-bold text-white text-shadow mb-3">
-                    <i class="bi bi-envelope-at me-3"></i>BiarMail
-                </h1>
-                <p class="fs-4 fs-md-3 text-white opacity-90 fw-light text-shadow">
-                    Free Disposable Email Service
-                </p>
-                <div class="d-flex justify-content-center mt-3 flex-wrap gap-2">
-                    <span class="badge-custom">
-                        <i class="bi bi-shield-check me-1"></i>Secure
-                    </span>
-                    <span class="badge-custom">
-                        <i class="bi bi-lightning-fill me-1"></i>Fast
-                    </span>
-                    <span class="badge-custom">
-                        <i class="bi bi-heart-fill me-1"></i>Free
-                    </span>
-                </div>
-            </div>
-
-            <div class="glass-card rounded-4 p-3 p-md-5 mb-4">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label for="providerSelect" class="form-label text-contrast fw-semibold mb-2">
-                            <i class="bi bi-server me-2"></i>Email Provider
-                        </label>
-                        <select id="providerSelect" class="form-select">
-                            <option value="random">🎲 Random (Recommended)</option>
-                        </select>
-                    </div>
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-6">
                     
-                    <div id="rushModeContainer" class="col-md-6 d-none">
-                        <label class="form-label text-contrast fw-semibold mb-2">
-                            <i class="bi bi-rocket-takeoff me-2"></i>Rush Mode
-                        </label>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="rushModeToggle" style="font-size: 1.2em;">
-                            <label class="form-check-label text-contrast-light" for="rushModeToggle">
-                                Ultra-fast generation
-                            </label>
+                    <div class="text-center mb-5">
+                        <h1 class="display-5 fw-bold text-slate-800 mb-3">
+                            <i class="bi bi-envelope-at me-3 text-primary"></i>BiarMail
+                        </h1>
+                        <p class="fs-5 text-muted mb-4">Free Disposable Email Service</p>
+                        <div class="d-flex justify-content-center flex-wrap gap-2">
+                            <span class="feature-badge">
+                                <i class="bi bi-shield-check me-1"></i>Secure
+                            </span>
+                            <span class="feature-badge">
+                                <i class="bi bi-lightning-fill me-1"></i>Fast
+                            </span>
+                            <span class="feature-badge">
+                                <i class="bi bi-heart-fill me-1"></i>Free
+                            </span>
                         </div>
                     </div>
-                </div>
 
-                <div class="d-grid gap-3 mb-4">
-                    <button id="generateEmailBtn" class="btn btn-lg btn-gradient-primary rounded-3 py-3 animate-pulse-glow">
-                        <i class="bi bi-plus-circle-fill me-2"></i>Generate New Email Address
-                    </button>
-                    <button id="deleteSessionBtn" class="btn btn-lg btn-gradient-secondary rounded-3 py-3 d-none">
-                        <i class="bi bi-trash3-fill me-2"></i>Delete Current Session
-                    </button>
-                </div>
-
-                <div id="emailInfo" class="d-none mb-4">
-                    <div class="glass-card rounded-3 p-4 mb-4 border border-primary border-opacity-25">
-                        <h3 class="h5 fw-bold text-contrast mb-3 d-flex align-items-center">
-                            <span class="status-indicator status-active"></span>
-                            <i class="bi bi-envelope-check-fill me-2"></i>Your Temporary Email
-                        </h3>
-                        
-                        <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 mb-3">
-                            <div class="email-address-display flex-grow-1">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-envelope-at me-2"></i>
-                                    <span id="emailAddress" class="fw-bold"></span>
+                    <div class="main-card p-4 mb-4">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="providerSelect" class="form-label fw-semibold">
+                                    <i class="bi bi-server me-2"></i>Email Provider
+                                </label>
+                                <select id="providerSelect" class="form-select">
+                                    <option value="random">🎲 Random (Recommended)</option>
+                                </select>
+                            </div>
+                            
+                            <div id="rushModeContainer" class="col-md-6 d-none">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-rocket-takeoff me-2"></i>Rush Mode
+                                </label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="rushModeToggle">
+                                    <label class="form-check-label text-muted" for="rushModeToggle">
+                                        Ultra-fast generation
+                                    </label>
                                 </div>
                             </div>
-                            <button id="copyEmailBtn" class="btn btn-gradient-success rounded-3 px-4 d-none">
-                                <i class="bi bi-clipboard-fill me-2"></i>Copy
+                        </div>
+
+                        <div class="d-grid gap-3 mb-4">
+                            <button id="generateEmailBtn" class="btn btn-primary btn-lg">
+                                <i class="bi bi-plus-circle-fill me-2"></i>Generate New Email Address
+                            </button>
+                            <button id="deleteSessionBtn" class="btn btn-danger btn-lg d-none">
+                                <i class="bi bi-trash3-fill me-2"></i>Delete Current Session
                             </button>
                         </div>
 
-                        <div class="row g-2">
-                            <div class="col-md-4">
-                                <div class="feature-highlight rounded-2 p-2">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-key-fill me-2"></i>
-                                        <small class="fw-semibold">ID:</small>
-                                        <code id="sessionId" class="ms-2 bg-primary bg-opacity-25 px-2 py-1 rounded text-primary fw-bold"></code>
+                        <div id="emailInfo" class="d-none mb-4">
+                            <div class="main-card p-4 border border-primary mb-4">
+                                <h3 class="h5 fw-semibold mb-3">
+                                    <span class="status-indicator"></span>
+                                    <i class="bi bi-envelope-check-fill me-2"></i>Your Temporary Email
+                                </h3>
+                                
+                                <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 mb-3">
+                                    <div class="email-display flex-grow-1">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-envelope-at me-2"></i>
+                                            <span id="emailAddress" class="fw-bold"></span>
+                                        </div>
                                     </div>
+                                    <button id="copyEmailBtn" class="btn btn-success d-none">
+                                        <i class="bi bi-clipboard-fill me-2"></i>Copy
+                                    </button>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="feature-highlight rounded-2 p-2">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-server me-2"></i>
-                                        <small class="fw-semibold">Provider:</small>
-                                        <code id="emailProvider" class="ms-2 bg-primary bg-opacity-25 px-2 py-1 rounded text-primary fw-bold"></code>
+
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <div class="bg-light p-2 rounded">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-key-fill me-2 text-primary"></i>
+                                                <small class="fw-semibold">ID:</small>
+                                                <code id="sessionId" class="ms-2 bg-primary bg-opacity-25 px-2 py-1 rounded text-primary fw-bold"></code>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="feature-highlight rounded-2 p-2">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-clock-fill me-2"></i>
-                                        <small class="fw-semibold">Expires:</small>
-                                        <code id="emailExpires" class="ms-2 bg-primary bg-opacity-25 px-2 py-1 rounded text-primary fw-bold">Not specified</code>
+                                    <div class="col-md-4">
+                                        <div class="bg-light p-2 rounded">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-server me-2 text-success"></i>
+                                                <small class="fw-semibold">Provider:</small>
+                                                <code id="emailProvider" class="ms-2 bg-success bg-opacity-25 px-2 py-1 rounded text-success fw-bold"></code>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="bg-light p-2 rounded">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-clock-fill me-2 text-warning"></i>
+                                                <small class="fw-semibold">Expires:</small>
+                                                <code id="emailExpires" class="ms-2 bg-warning bg-opacity-25 px-2 py-1 rounded text-warning fw-bold">Not specified</code>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div id="controlsAndStatusContainer" class="text-center mb-4">
-                    <button id="checkMessagesBtn" class="btn btn-gradient-success btn-lg rounded-3 px-5 py-3 d-none">
-                        <i class="bi bi-arrow-clockwise me-2"></i>Check Messages
-                    </button>
-                    
-                    <div id="loadingMessages" class="d-none">
-                        <div class="d-flex align-items-center justify-content-center text-contrast">
-                            <div class="spinner-border spinner-border-sm me-3 text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                        <div id="controlsContainer" class="text-center mb-4">
+                            <button id="checkMessagesBtn" class="btn btn-success btn-lg d-none">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Check Messages
+                            </button>
+                            
+                            <div id="loadingMessages" class="d-none">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div class="spinner-border spinner-border-sm me-3 text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <span class="fw-semibold">Loading messages...</span>
+                                </div>
                             </div>
-                            <span class="fw-semibold">Loading messages...</span>
+                        </div>
+
+                        <div id="messagesContainer" class="custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
                         </div>
                     </div>
-                </div>
 
-                <div id="messagesContainer" class="custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
-                </div>
-            </div>
-
-            <div id="errorDisplay" class="alert alert-danger rounded-3 d-none" role="alert">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-                    <div>
-                        <strong>Error:</strong>
-                        <span id="errorMessage"></span>
+                    <div id="errorDisplay" class="alert alert-danger d-none" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                            <div>
+                                <strong>Error:</strong>
+                                <span id="errorMessage"></span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div id="successDisplay" class="alert alert-success rounded-3 d-none" role="alert">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-check-circle-fill me-2 fs-5"></i>
-                    <div>
-                        <strong>Success:</strong>
-                        <span id="successMessage"></span>
+                    <div id="successDisplay" class="alert alert-success d-none" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                            <div>
+                                <strong>Success:</strong>
+                                <span id="successMessage"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="successCopy" class="position-fixed bottom-0 end-0 m-3 alert alert-success rounded-3 d-none" style="z-index: 1070;">
+    <div id="successCopy" class="position-fixed bottom-0 end-0 m-3 alert alert-success d-none" style="z-index: 1070;">
         <div class="d-flex align-items-center">
             <i class="bi bi-clipboard-check-fill me-2"></i>
             <span>Email copied to clipboard!</span>
@@ -718,8 +581,8 @@
                 const placeholder = document.createElement('div');
                 placeholder.className = 'text-center py-5 placeholder-message';
                 placeholder.innerHTML = `
-                    <i class="bi ${icon} display-1 text-primary opacity-50 mb-3"></i>
-                    <p class="text-contrast fs-5 fw-semibold">${text}</p>
+                    <i class="bi ${icon} display-1 text-muted opacity-50 mb-3"></i>
+                    <p class="text-muted fs-5">${text}</p>
                 `;
                 container.appendChild(placeholder);
             }
@@ -812,10 +675,6 @@
                 } catch (e) {
                     console.error("Error parsing session data from localStorage:", e);
                     clearSessionFromLocalStorage();
-                    try {
-                        const temp = JSON.parse(savedSession);
-                        if (temp.sessionId) clearClientSideDataForSession(temp.sessionId);
-                    } catch {}
                 }
             }
             return false;
@@ -926,14 +785,10 @@
 
         function renderMessageDOM(message) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'message-card rounded-3 p-4 mb-4 message-item';
+            messageDiv.className = 'message-card p-3 mb-3 message-item';
             messageDiv.dataset.messageId = message.id;
 
             let fromDisplay = escapeHTML(message.from || 'Unknown Sender');
-            if (!message.from && message.raw && typeof message.raw.od === 'string' && message.raw.od.trim() !== '') {
-                fromDisplay = escapeHTML(message.raw.od);
-            }
-
             const subjectText = escapeHTML(message.subject || '(No Subject)');
             const dateText = escapeHTML(message.date ? new Date(message.date).toLocaleString() : 'Unknown Date');
             let bodyText = '';
@@ -949,38 +804,38 @@
             const toggleBtnId = `toggle-${message.id.replace(/[^a-zA-Z0-9-_]/g, '')}`;
 
             messageDiv.innerHTML = `
-                <div class="d-flex justify-content-between align-items-start border-bottom border-primary border-opacity-25 pb-3 mb-3">
+                <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
                     <div class="flex-grow-1">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-person-circle me-2 text-primary fs-5"></i>
-                            <span class="fw-bold text-contrast">${fromDisplay}</span>
+                            <span class="fw-semibold">${fromDisplay}</span>
                         </div>
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-chat-square-text me-2 text-success fs-5"></i>
-                            <span class="text-contrast fw-semibold">${subjectText}</span>
+                            <span class="fw-semibold">${subjectText}</span>
                         </div>
                         <div class="d-flex align-items-center">
                             <i class="bi bi-clock me-2 text-warning"></i>
-                            <small class="text-contrast-light fw-medium">${dateText}</small>
+                            <small class="text-muted">${dateText}</small>
                         </div>
                     </div>
-                    <button id="${deleteBtnId}" data-message-id-to-delete="${message.id}" class="delete-message-btn btn btn-gradient-danger btn-sm rounded-2">
+                    <button id="${deleteBtnId}" data-message-id-to-delete="${message.id}" class="delete-message-btn btn btn-danger btn-sm">
                         <i class="bi bi-trash3"></i>
                     </button>
                 </div>
                 
                 <div class="mt-3">
-                    <button id="${toggleBtnId}" class="btn btn-outline-primary btn-sm rounded-2 w-100 mb-3" type="button">
+                    <button id="${toggleBtnId}" class="btn btn-outline-primary btn-sm w-100 mb-3" type="button">
                         <i class="bi bi-chevron-down me-2"></i>Show Message Content
                     </button>
                     
                     <div id="${contentId}" style="display: none;">
-                        <div class="border border-primary border-opacity-25 rounded-3 p-4 bg-white">
+                        <div class="border rounded p-3 bg-light">
                             <div class="d-flex align-items-center mb-3">
-                                <i class="bi bi-file-text me-2 text-black"></i>
-                                <h6 class="mb-0 fw-bold text-black">Message Content:</h6>
+                                <i class="bi bi-file-text me-2"></i>
+                                <h6 class="mb-0 fw-semibold">Message Content:</h6>
                             </div>
-                            <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.6; color: #000000; white-space: pre-wrap; word-wrap: break-word; min-height: 100px; max-height: 400px; overflow-y: auto;">${escapeHTML(bodyText)}</div>
+                            <pre class="bg-white border rounded p-3 text-dark" style="font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; word-wrap: break-word; max-height: 400px; overflow-y: auto;">${escapeHTML(bodyText)}</pre>
                         </div>
                     </div>
                 </div>
@@ -990,13 +845,13 @@
                 const rawHtml = Array.isArray(message.html) ? message.html.join('') : String(message.html);
                 if (rawHtml.trim()) {
                     const htmlContainer = document.createElement('div');
-                    htmlContainer.className = 'mt-3 border border-success border-opacity-25 rounded-3 p-4 bg-white';
+                    htmlContainer.className = 'mt-3 border rounded p-3 bg-light';
                     htmlContainer.innerHTML = `
                         <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-code-slash me-2 text-black"></i>
-                            <h6 class="mb-0 fw-bold text-black">HTML Preview:</h6>
+                            <i class="bi bi-code-slash me-2"></i>
+                            <h6 class="mb-0 fw-semibold">HTML Preview:</h6>
                         </div>
-                        <div style="border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+                        <div class="border rounded overflow-hidden">
                             <iframe sandbox="allow-same-origin" srcdoc="${escapeHTML(rawHtml)}" style="width: 100%; min-height: 300px; border: none;"></iframe>
                         </div>
                     `;
@@ -1022,12 +877,9 @@
                     if (contentElement.style.display === 'none') {
                         contentElement.style.display = 'block';
                         toggleButton.innerHTML = '<i class="bi bi-chevron-up me-2"></i>Hide Message Content';
-                        console.log('Showing content for message:', message.id);
-                        console.log('Content text:', bodyText);
                     } else {
                         contentElement.style.display = 'none';
                         toggleButton.innerHTML = '<i class="bi bi-chevron-down me-2"></i>Show Message Content';
-                        console.log('Hiding content for message:', message.id);
                     }
                 });
             }
@@ -1094,7 +946,7 @@
                             'mail.gw': '🌐',
                             'tempmail.lol': '⚡',
                             'dropmail.me': '💧',
-                            'disposablemail': '🗑️'
+                            'temp-mail.org': '🔥'
                         };
                         
                         option.textContent = `${providerIcons[provider] || '📮'} ${provider}`;
@@ -1133,25 +985,19 @@
         deleteSessionBtn.addEventListener('click', deleteSession);
 
         const sidebarToggle = document.getElementById('sidebarToggle');
-        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const closeSidebar = document.getElementById('closeSidebar');
         const sidebar = document.getElementById('sidebar');
         const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 
         function toggleSidebar() {
-            const isOpen = sidebar.classList.contains('translate-x-0');
-            sidebar.classList.toggle('translate-x-0', !isOpen);
-            sidebar.classList.toggle('-translate-x-full', isOpen);
-
-            sidebarToggle.style.opacity = isOpen ? '1' : '0.7';
-            sidebarToggle.style.pointerEvents = isOpen ? 'auto' : 'auto';
-
-            sidebarBackdrop.classList.toggle('opacity-0', isOpen);
-            sidebarBackdrop.style.pointerEvents = isOpen ? 'none' : 'auto';
+            const isOpen = sidebar.classList.contains('show');
+            sidebar.classList.toggle('show', !isOpen);
+            sidebarBackdrop.classList.toggle('show', !isOpen);
             document.body.style.overflow = isOpen ? 'auto' : 'hidden';
         }
 
         sidebarToggle.addEventListener('click', toggleSidebar);
-        closeSidebarBtn.addEventListener('click', toggleSidebar);
+        closeSidebar.addEventListener('click', toggleSidebar);
         sidebarBackdrop.addEventListener('click', toggleSidebar);
 
         document.addEventListener('DOMContentLoaded', async () => {

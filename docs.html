@@ -3,287 +3,466 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temp Mail API Docs</title>
+    <title>Temp Mail API Documentation</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            overscroll-behavior-y: contain;
-            scroll-behavior: smooth;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
         }
-        .api-endpoint {
-            border-left-width: 4px;
-            transition: box-shadow 0.3s ease-in-out;
+
+        .api-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
         }
-        .api-endpoint:hover {
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+        .api-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .api-get { border-color: #3b82f6; }
-        .api-post { border-color: #10b981; }
-        .api-delete { border-color: #ef4444; }
+
+        .api-get { border-left: 4px solid #3b82f6; }
+        .api-post { border-left: 4px solid #10b981; }
+        .api-delete { border-left: 4px solid #ef4444; }
+
+        .method-badge-get {
+            background-color: #dbeafe;
+            color: #1e40af;
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .method-badge-post {
+            background-color: #dcfce7;
+            color: #166534;
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .method-badge-delete {
+            background-color: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .session-info-card {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+        }
+
+        .error-card {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        }
+
+        .btn-primary {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+            border-color: #059669;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+            border-color: #dc2626;
+        }
+
+        .response-pre {
+            background-color: #f8fafc;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .message-item-iframe {
+            width: 100%;
+            min-height: 200px;
+            max-height: 400px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: auto;
+        }
 
         details summary {
             cursor: pointer;
             list-style: none;
-            padding: 0.75rem 1rem;
-            border-radius: 0.375rem;
-            transition: background-color 0.2s ease-in-out;
+            padding: 1rem;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            font-weight: 600;
         }
+
         details summary:hover {
-            background-color: #f9fafb;
+            background-color: #f8fafc;
         }
-        details summary::-webkit-details-marker { display: none; }
+
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+
         details summary::before {
             content: '▶';
             margin-right: 0.75rem;
             display: inline-block;
-            transition: transform 0.2s ease-in-out;
-            font-size: 0.8em;
+            transition: transform 0.2s ease;
+            font-size: 0.875rem;
             color: #6b7280;
         }
+
         details[open] summary::before {
             transform: rotate(90deg);
         }
+
         details[open] summary {
-            background-color: #f3f4f6;
+            background-color: #f1f5f9;
         }
 
-        input[type="text"], input[type="number"], select {
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
+        .back-button {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #3b82f6;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
-        button, .button {
-            padding-top: 0.625rem;
-            padding-bottom: 0.625rem;
-            padding-left: 1.25rem;
-            padding-right: 1.25rem;
-            min-height: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-        .response-pre {
-            background-color: #f8fafc; 
-            color: #334155; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 0.375rem; 
-            padding: 0.75rem; 
-            font-family: 'Monaco', 'Consolas', monospace;
+        .back-button:hover {
+            background-color: #3b82f6;
+            color: white;
+            text-decoration: none;
         }
-        .message-item-iframe {
-            width: 100%;
-            min-height: 200px;
-            max-height: 400px; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 0.375rem; 
-            overflow: auto; 
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .api-card {
+                margin-bottom: 1rem;
+            }
+            
+            .method-badge-get,
+            .method-badge-post,
+            .method-badge-delete {
+                font-size: 0.625rem;
+                padding: 0.25rem 0.5rem;
+            }
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 p-2 sm:p-4 md:p-6">
-    <div class="container mx-auto max-w-5xl">
-        <header class="mb-4 md:mb-6">
-            <div class="flex justify-start items-center mb-3 sm:mb-4">
-                 <a href="/" class="text-sky-600 hover:text-sky-700 font-medium transition-colors py-2 px-3 rounded-md hover:bg-sky-100 text-sm sm:text-base">&larr; Back to App</a>
+<body>
+    <div class="container mx-auto py-4">
+        <header class="mb-4">
+            <div class="d-flex justify-content-start align-items-center mb-4">
+                <a href="/" class="back-button">
+                    ← Back to App
+                </a>
             </div>
             <div class="text-center">
-                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-700">Temp Mail API Interface</h1>
-                <p class="text-slate-600 mt-1 sm:mt-2 text-sm sm:text-base">Interact with and test the Temp Mail API endpoints.</p>
+                <h1 class="display-5 fw-bold text-slate-800 mb-3">Temp Mail API Interface</h1>
+                <p class="text-muted">Interact with and test the Temp Mail API endpoints.</p>
             </div>
         </header>
 
-        <div id="globalInfo" class="mb-4 md:mb-6 p-3 sm:p-4 bg-sky-50 border border-sky-200 rounded-lg shadow-sm">
-            <h2 class="text-lg sm:text-xl font-semibold text-sky-700 mb-2">Current Session:</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
-                <div><strong>Email:</strong> <span id="currentEmail" class="font-mono text-sky-600 break-all">N/A</span></div>
-                <div><strong>Session ID:</strong> <span id="currentSessionId" class="font-mono text-sky-600 break-all">N/A</span></div>
-                <div><strong>Provider:</strong> <span id="currentProvider" class="font-mono text-sky-600 break-words">N/A</span></div>
+        <div id="globalInfo" class="session-info-card p-4 mb-4">
+            <h2 class="h5 fw-semibold text-blue-700 mb-3">Current Session:</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <strong class="me-2">Email:</strong>
+                        <code id="currentEmail" class="text-blue-600 fw-semibold">N/A</code>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <strong class="me-2">Session ID:</strong>
+                        <code id="currentSessionId" class="text-blue-600 fw-semibold">N/A</code>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <strong class="me-2">Provider:</strong>
+                        <code id="currentProvider" class="text-blue-600 fw-semibold">N/A</code>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="globalErrorDisplay" class="my-3 sm:my-4 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-700 rounded-md shadow hidden">
-            <h3 class="font-semibold text-base sm:text-lg">API Error:</h3>
-            <pre id="globalErrorMessage" class="whitespace-pre-wrap text-xs sm:text-sm custom-scrollbar max-h-40 overflow-y-auto"></pre>
+        <div id="globalErrorDisplay" class="error-card p-4 mb-4 d-none">
+            <h3 class="h6 fw-semibold text-red-700 mb-2">API Error:</h3>
+            <pre id="globalErrorMessage" class="text-red-600 mb-0 custom-scrollbar" style="max-height: 200px; overflow-y: auto; font-size: 0.875rem;"></pre>
         </div>
 
-        <div class="space-y-4 md:space-y-6">
-
-            <section id="api-providers" class="api-endpoint api-get bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
-                <details open>
-                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                        <div class="flex items-center mb-1 sm:mb-0">
-                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2">GET</span>
-                            <span class="break-all">/providers</span>
-                        </div>
-                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">List Available Providers</span>
-                    </summary>
-                    <div class="mt-3 pt-3 border-t border-slate-200">
-                        <button id="fetchProvidersBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Fetch Providers</button>
-                        <div class="mt-3">
-                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
-                            <pre id="providersResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
-                        </div>
-                    </div>
-                </details>
-            </section>
-
-            <section id="api-gen" class="api-endpoint api-post bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
-                <details>
-                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                        <div class="flex items-center mb-1 sm:mb-0">
-                            <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2">POST</span>
-                            <span class="break-all">/gen</span>
-                        </div>
-                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Generate Email (Quick/Random)</span>
-                    </summary>
-                    <div class="mt-3 pt-3 border-t border-slate-200">
-                        <p class="text-xs text-slate-500 mb-3">Note: This endpoint also supports GET requests. Use 'random' for provider to pick randomly.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="api-card api-get">
+                    <details open>
+                        <summary class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                            <div class="d-flex align-items-center mb-2 mb-md-0">
+                                <span class="method-badge-get me-2">GET</span>
+                                <code class="fw-semibold">/providers</code>
+                            </div>
+                            <span class="text-muted small">List Available Providers</span>
+                        </summary>
+                        <div class="p-4 pt-0">
+                            <button id="fetchProvidersBtn" class="btn btn-primary mb-3">
+                                Fetch Providers
+                            </button>
                             <div>
-                                <label for="genProvider" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Provider (optional):</label>
-                                <input type="text" id="genProvider" name="genProvider" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="e.g., mail.tm, random">
-                            </div>
-                            <div>
-                                <label for="genRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (tempmail.lol):</label>
-                                <select id="genRushMode" name="genRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm">
-                                    <option value="false">False</option>
-                                    <option value="true">True</option>
-                                </select>
+                                <h4 class="h6 fw-semibold mb-2">Response:</h4>
+                                <pre id="providersResponse" class="response-pre custom-scrollbar"></pre>
                             </div>
                         </div>
-                        <button id="generateEmailGenBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Generate Email</button>
-                        <div class="mt-3">
-                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
-                            <pre id="genResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
-                        </div>
-                    </div>
-                </details>
-            </section>
+                    </details>
+                </div>
+            </div>
 
-            <section id="api-sessions-post" class="api-endpoint api-post bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
-                <details>
-                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                        <div class="flex items-center mb-1 sm:mb-0">
-                            <span class="font-mono text-xs sm:text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mr-2">POST</span>
-                            <span class="break-all">/sessions</span>
-                        </div>
-                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Create Session (Specific Provider)</span>
-                    </summary>
-                    <div class="mt-3 pt-3 border-t border-slate-200">
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                            <div>
-                                <label for="sessionProviderName" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Provider Name (required):</label>
-                                <input type="text" id="sessionProviderName" name="sessionProviderName" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="e.g., mail.tm">
+            <div class="col-12">
+                <div class="api-card api-post">
+                    <details>
+                        <summary class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                            <div class="d-flex align-items-center mb-2 mb-md-0">
+                                <span class="method-badge-post me-2">POST</span>
+                                <code class="fw-semibold">/gen</code>
                             </div>
+                            <span class="text-muted small">Generate Email (Quick/Random)</span>
+                        </summary>
+                        <div class="p-4 pt-0">
+                            <p class="text-muted small mb-3">Note: This endpoint also supports GET requests. Use 'random' for provider to pick randomly.</p>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="genProvider" class="form-label fw-semibold">Provider (optional):</label>
+                                    <input type="text" id="genProvider" class="form-control" placeholder="e.g., mail.tm, random">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="genRushMode" class="form-label fw-semibold">Rush Mode (tempmail.lol):</label>
+                                    <select id="genRushMode" class="form-select">
+                                        <option value="false">False</option>
+                                        <option value="true">True</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="generateEmailGenBtn" class="btn btn-success mb-3">
+                                Generate Email
+                            </button>
                             <div>
-                                <label for="sessionRushMode" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Rush Mode (tempmail.lol):</label>
-                                <select id="sessionRushMode" name="sessionRushMode" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm">
-                                    <option value="false">False</option>
-                                    <option value="true">True</option>
-                                </select>
+                                <h4 class="h6 fw-semibold mb-2">Response:</h4>
+                                <pre id="genResponse" class="response-pre custom-scrollbar"></pre>
                             </div>
                         </div>
-                        <button id="createSessionBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Create Session</button>
-                        <div class="mt-3">
-                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
-                            <pre id="createSessionResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
-                        </div>
-                    </div>
-                </details>
-            </section>
+                    </details>
+                </div>
+            </div>
 
-            <section id="api-messages" class="api-endpoint api-get bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
-                <details>
-                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                         <div class="flex items-center mb-1 sm:mb-0">
-                            <span class="font-mono text-xs sm:text-sm bg-sky-100 text-sky-700 px-2 py-1 rounded-md mr-2">GET</span>
-                            <span class="break-all">/sessions/{id}/messages</span>
-                        </div>
-                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Fetch Messages for Session</span>
-                    </summary>
-                    <div class="mt-3 pt-3 border-t border-slate-200">
-                        <div class="mb-3">
-                            <label for="messagesSessionId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">API Session ID (current if blank):</label>
-                            <input type="text" id="messagesSessionId" name="messagesSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="Uses current session ID">
-                        </div>
-                        <button id="fetchMessagesBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Fetch Messages</button>
-                        <div class="mt-3">
-                            <h4 class="font-medium text-slate-600 mb-2 text-xs sm:text-sm">Messages:</h4>
-                            <div id="messagesResponse" class="text-xs sm:text-sm space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar p-1 bg-slate-50 rounded-md border border-slate-200 min-h-[100px]">
-                                <p class="text-slate-500 p-2 placeholder-message text-center">No messages fetched yet.</p>
+            <div class="col-12">
+                <div class="api-card api-post">
+                    <details>
+                        <summary class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                            <div class="d-flex align-items-center mb-2 mb-md-0">
+                                <span class="method-badge-post me-2">POST</span>
+                                <code class="fw-semibold">/sessions</code>
                             </div>
-                        </div>
-                    </div>
-                </details>
-            </section>
-
-            <section id="api-delete-message" class="api-endpoint api-delete bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
-                <details>
-                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                        <div class="flex items-center mb-1 sm:mb-0">
-                            <span class="font-mono text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-md mr-2">DELETE</span>
-                            <span class="break-all">/sessions/{id}/messages/{msg_id}</span>
-                        </div>
-                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Delete Specific Message</span>
-                    </summary>
-                    <div class="mt-3 pt-3 border-t border-slate-200">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <span class="text-muted small">Create Session (Specific Provider)</span>
+                        </summary>
+                        <div class="p-4 pt-0">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="sessionProviderName" class="form-label fw-semibold">Provider Name (required):</label>
+                                    <input type="text" id="sessionProviderName" class="form-control" placeholder="e.g., mail.tm">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="sessionRushMode" class="form-label fw-semibold">Rush Mode (tempmail.lol):</label>
+                                    <select id="sessionRushMode" class="form-select">
+                                        <option value="false">False</option>
+                                        <option value="true">True</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="createSessionBtn" class="btn btn-success mb-3">
+                                Create Session
+                            </button>
                             <div>
-                                <label for="deleteMessageSessionId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">API Session ID (current if blank):</label>
-                                <input type="text" id="deleteMessageSessionId" name="deleteMessageSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="Uses current session ID">
-                            </div>
-                            <div>
-                                <label for="deleteMessageId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">Message ID (required):</label>
-                                <input type="text" id="deleteMessageId" name="deleteMessageId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="Enter Message ID">
+                                <h4 class="h6 fw-semibold mb-2">Response:</h4>
+                                <pre id="createSessionResponse" class="response-pre custom-scrollbar"></pre>
                             </div>
                         </div>
-                        <button id="deleteMessageBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Delete Message</button>
-                        <div class="mt-3">
-                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
-                            <pre id="deleteMessageResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
-                        </div>
-                    </div>
-                </details>
-            </section>
+                    </details>
+                </div>
+            </div>
 
-            <section id="api-delete-session" class="api-endpoint api-delete bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-lg">
-                <details>
-                    <summary class="text-lg sm:text-xl font-semibold text-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                        <div class="flex items-center mb-1 sm:mb-0">
-                            <span class="font-mono text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-md mr-2">DELETE</span>
-                            <span class="break-all">/sessions/{api_session_id}</span>
+            <div class="col-12">
+                <div class="api-card api-get">
+                    <details>
+                        <summary class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                            <div class="d-flex align-items-center mb-2 mb-md-0">
+                                <span class="method-badge-get me-2">GET</span>
+                                <code class="fw-semibold">/sessions/{id}/messages</code>
+                            </div>
+                            <span class="text-muted small">Fetch Messages for Session</span>
+                        </summary>
+                        <div class="p-4 pt-0">
+                            <div class="mb-3">
+                                <label for="messagesSessionId" class="form-label fw-semibold">API Session ID (current if blank):</label>
+                                <input type="text" id="messagesSessionId" class="form-control" placeholder="Uses current session ID">
+                            </div>
+                            <button id="fetchMessagesBtn" class="btn btn-primary mb-3">
+                                Fetch Messages
+                            </button>
+                            <div>
+                                <h4 class="h6 fw-semibold mb-2">Messages:</h4>
+                                <div id="messagesResponse" class="p-3 bg-light border rounded custom-scrollbar" style="min-height: 100px; max-height: 500px; overflow-y: auto;">
+                                    <p class="text-muted text-center mb-0">No messages fetched yet.</p>
+                                </div>
+                            </div>
                         </div>
-                        <span class="text-xs sm:text-sm text-slate-500 sm:text-right mt-1 sm:mt-0">Delete Session</span>
-                    </summary>
-                    <div class="mt-3 pt-3 border-t border-slate-200">
-                        <div class="mb-3">
-                            <label for="deleteSessionId" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">API Session ID (current if blank):</label>
-                            <input type="text" id="deleteSessionId" name="deleteSessionId" class="block w-full border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 text-sm" placeholder="Uses current session ID">
+                    </details>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="api-card api-delete">
+                    <details>
+                        <summary class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                            <div class="d-flex align-items-center mb-2 mb-md-0">
+                                <span class="method-badge-delete me-2">DELETE</span>
+                                <code class="fw-semibold">/sessions/{id}/messages/{msg_id}</code>
+                            </div>
+                            <span class="text-muted small">Delete Specific Message</span>
+                        </summary>
+                        <div class="p-4 pt-0">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="deleteMessageSessionId" class="form-label fw-semibold">API Session ID (current if blank):</label>
+                                    <input type="text" id="deleteMessageSessionId" class="form-control" placeholder="Uses current session ID">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="deleteMessageId" class="form-label fw-semibold">Message ID (required):</label>
+                                    <input type="text" id="deleteMessageId" class="form-control" placeholder="Enter Message ID">
+                                </div>
+                            </div>
+                            <button id="deleteMessageBtn" class="btn btn-danger mb-3">
+                                Delete Message
+                            </button>
+                            <div>
+                                <h4 class="h6 fw-semibold mb-2">Response:</h4>
+                                <pre id="deleteMessageResponse" class="response-pre custom-scrollbar"></pre>
+                            </div>
                         </div>
-                        <button id="deleteSessionDocsBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md shadow hover:shadow-md transition-all duration-150 text-sm">Delete Session</button>
-                        <div class="mt-3">
-                            <h4 class="font-medium text-slate-600 mb-1 text-xs sm:text-sm">Response:</h4>
-                            <pre id="deleteSessionResponse" class="text-xs sm:text-sm whitespace-pre-wrap response-pre max-h-60 overflow-y-auto custom-scrollbar"></pre>
+                    </details>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="api-card api-delete">
+                    <details>
+                        <summary class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                            <div class="d-flex align-items-center mb-2 mb-md-0">
+                                <span class="method-badge-delete me-2">DELETE</span>
+                                <code class="fw-semibold">/sessions/{api_session_id}</code>
+                            </div>
+                            <span class="text-muted small">Delete Session</span>
+                        </summary>
+                        <div class="p-4 pt-0">
+                            <div class="mb-3">
+                                <label for="deleteSessionId" class="form-label fw-semibold">API Session ID (current if blank):</label>
+                                <input type="text" id="deleteSessionId" class="form-control" placeholder="Uses current session ID">
+                            </div>
+                            <button id="deleteSessionDocsBtn" class="btn btn-danger mb-3">
+                                Delete Session
+                            </button>
+                            <div>
+                                <h4 class="h6 fw-semibold mb-2">Response:</h4>
+                                <pre id="deleteSessionResponse" class="response-pre custom-scrollbar"></pre>
+                            </div>
                         </div>
-                    </div>
-                </details>
-            </section>
+                    </details>
+                </div>
+            </div>
         </div>
-        <footer class="mt-8 sm:mt-12 py-4 sm:py-6 text-center text-slate-500 text-xs sm:text-sm">
-            Temp Mail API Docs Interface &copy; 2025-2026
+
+        <footer class="text-center text-muted mt-5 py-4">
+            <small>Temp Mail API Documentation Interface &copy; 2025</small>
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        const API_BASE_URL = ''; 
+        const API_BASE_URL = '';
         let G_CURRENT_SESSION_ID = null;
         let G_CURRENT_EMAIL = null;
         let G_CURRENT_PROVIDER = null;
@@ -299,17 +478,17 @@
             if (data && data.detail) {
                 fullMessage += `\nDetails: ${typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail, null, 2)}`;
             } else if (data && typeof data === 'object') {
-                 fullMessage += `\n${JSON.stringify(data, null, 2)}`;
+                fullMessage += `\n${JSON.stringify(data, null, 2)}`;
             } else if (data) {
-                 fullMessage += `\n${data}`;
+                fullMessage += `\n${data}`;
             }
             globalErrorMessage.textContent = fullMessage;
-            globalErrorDisplay.classList.remove('hidden');
+            globalErrorDisplay.classList.remove('d-none');
             console.error("Global Error:", fullMessage, data);
         }
 
         function clearGlobalError() {
-            globalErrorDisplay.classList.add('hidden');
+            globalErrorDisplay.classList.add('d-none');
             globalErrorMessage.textContent = '';
         }
 
@@ -365,13 +544,13 @@
                 deleteSessionIdInput.placeholder = placeholderText;
                 deleteMessageSessionIdInput.placeholder = placeholderText;
             } else {
-                 messagesSessionIdInput.placeholder = placeholderEnter;
-                 deleteSessionIdInput.placeholder = placeholderEnter;
-                 deleteMessageSessionIdInput.placeholder = placeholderEnter;
+                messagesSessionIdInput.placeholder = placeholderEnter;
+                deleteSessionIdInput.placeholder = placeholderEnter;
+                deleteMessageSessionIdInput.placeholder = placeholderEnter;
             }
             if (G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionId) {
                 const messagesContainer = document.getElementById('messagesResponse');
-                messagesContainer.innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">No messages fetched yet for this session.</p>';
+                messagesContainer.innerHTML = '<p class="text-muted text-center mb-0">No messages fetched yet for this session.</p>';
                 G_DISPLAYED_MESSAGE_IDS.clear();
             }
             G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionId;
@@ -386,24 +565,28 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;')
-                .replace(/`/g, '\\`')      
-                .replace(/\$\{/g, '\\${'); 
+                .replace(/`/g, '\\`')
+                .replace(/\$\{/g, '\\${');
         }
-
 
         async function apiRequest(endpoint, method = 'GET', body = null, params = null, buttonElement = null) {
             clearGlobalError();
             const originalButtonText = buttonElement ? buttonElement.innerHTML : null;
             if (buttonElement) {
                 buttonElement.disabled = true;
-                buttonElement.innerHTML = `<div class="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1 sm:mr-2"></div><span class="text-xs sm:text-sm">Processing...</span>`;
+                buttonElement.innerHTML = `
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Processing...
+                `;
             }
 
             const url = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin);
             if (params) {
                 Object.keys(params).forEach(key => {
                     if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
-                         url.searchParams.append(key, params[key]);
+                        url.searchParams.append(key, params[key]);
                     }
                 });
             }
@@ -418,8 +601,8 @@
                 const response = await fetch(url, options);
                 if (buttonElement && originalButtonText) buttonElement.innerHTML = originalButtonText;
 
-                if (response.status === 204) { 
-                     if (buttonElement) buttonElement.disabled = false;
+                if (response.status === 204) {
+                    if (buttonElement) buttonElement.disabled = false;
                     return { success: true, status: 204, data: null };
                 }
 
@@ -435,7 +618,7 @@
                         responseData = { detail: `Server returned non-JSON response with status ${response.status}`, content: textResponse };
                     }
                 }
-                
+
                 if (!response.ok) {
                     throw { status: response.status, data: responseData };
                 }
@@ -446,8 +629,8 @@
                 const errorMessageText = error.data ? (error.data.detail || (typeof error.data === 'string' ? error.data : JSON.stringify(error.data))) : error.message || 'Network error or invalid/unexpected response';
                 displayGlobalError(`Error ${error.status || 'Network'}: ${errorMessageText}`, error.data);
                 if (buttonElement && originalButtonText) {
-                     buttonElement.innerHTML = originalButtonText;
-                     buttonElement.disabled = false;
+                    buttonElement.innerHTML = originalButtonText;
+                    buttonElement.disabled = false;
                 }
                 return { success: false, status: error.status, error: error.data || { detail: errorMessageText } };
             }
@@ -455,28 +638,27 @@
 
         function displayMessageInDocs(containerId, messageData, append = false) {
             const container = document.getElementById(containerId);
-            if (!append) { 
+            if (!append) {
                 container.innerHTML = '';
                 G_DISPLAYED_MESSAGE_IDS.clear();
             }
 
-            const placeholder = container.querySelector('p.placeholder-message');
+            const placeholder = container.querySelector('p.text-muted.text-center');
             if (messageData && messageData.length > 0 && placeholder) {
                 placeholder.remove();
             } else if ((!messageData || messageData.length === 0) && !append && !placeholder) {
-                 container.innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">No messages found.</p>';
+                container.innerHTML = '<p class="text-muted text-center mb-0">No messages found.</p>';
                 return;
             } else if ((!messageData || messageData.length === 0) && append && container.querySelectorAll('.message-item').length === 0) {
-                 container.innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">No new messages.</p>';
+                container.innerHTML = '<p class="text-muted text-center mb-0">No new messages.</p>';
                 return;
             }
-
 
             messageData.forEach(msg => {
                 if (G_DISPLAYED_MESSAGE_IDS.has(msg.id) && append) return;
 
                 const msgDiv = document.createElement('div');
-                msgDiv.className = 'p-2 sm:p-3 border border-slate-200 rounded-md bg-white shadow-sm hover:shadow-md transition-shadow message-item';
+                msgDiv.className = 'p-3 border rounded mb-3 bg-white message-item';
                 msgDiv.setAttribute('data-message-id', msg.id);
 
                 let fromDisplay = msg.from_address || 'Unknown Sender';
@@ -490,35 +672,36 @@
                 let dateText = msg.date ? new Date(msg.date).toLocaleString() : 'Unknown Date';
                 let bodyText = msg.body || '(No text body)';
                 let htmlContent = msg.html ? escapeForSrcdoc(Array.isArray(msg.html) ? msg.html.join('') : String(msg.html)) : '';
-                
+
                 const uniqueDetailsId = `msg-details-${msg.id}-${Date.now()}`;
 
                 msgDiv.innerHTML = `
-                    <p class="text-xs text-slate-500 mb-1 break-all">ID: <span class="font-mono select-all">${msg.id}</span></p>
-                    <p class="text-xs sm:text-sm break-words"><strong>From:</strong> <span class="text-slate-700">${escapeForSrcdoc(fromDisplay)}</span></p>
-                    <p class="text-xs sm:text-sm break-words"><strong>Subject:</strong> <span class="text-slate-700">${escapeForSrcdoc(subjectText)}</span></p>
-                    <p class="text-xs text-slate-500 mt-1"><strong>Date:</strong> ${dateText}</p>
-                    <details class="mt-2 text-xs sm:text-sm group" id="${uniqueDetailsId}">
-                        <summary class="text-sky-600 hover:text-sky-700 cursor-pointer list-none group-open:mb-1 text-xs">
-                            <span class="group-open:hidden">Show Body/HTML ▼</span>
-                            <span class="hidden group-open:inline">Hide Body/HTML ▲</span>
+                    <div class="border-bottom pb-3 mb-3">
+                        <p class="small text-muted mb-1">ID: <code class="text-primary">${msg.id}</code></p>
+                        <p class="mb-1"><strong>From:</strong> <span class="text-dark">${escapeForSrcdoc(fromDisplay)}</span></p>
+                        <p class="mb-1"><strong>Subject:</strong> <span class="text-dark">${escapeForSrcdoc(subjectText)}</span></p>
+                        <p class="small text-muted mb-0"><strong>Date:</strong> ${dateText}</p>
+                    </div>
+                    <details class="small" id="${uniqueDetailsId}">
+                        <summary class="text-primary fw-semibold" style="cursor: pointer;">
+                            Show Body/HTML ▼
                         </summary>
-                        <div class="mt-1 p-2 bg-slate-50 rounded border border-slate-200">
-                            <p class="font-semibold text-slate-700 text-xs">Text Body:</p>
-                            <pre class="whitespace-pre-wrap text-xs custom-scrollbar max-h-40 sm:max-h-48 overflow-y-auto p-1 bg-white border border-slate-100 rounded">${escapeForSrcdoc(bodyText)}</pre>
+                        <div class="mt-2 p-3 bg-light border rounded">
+                            <p class="fw-semibold text-dark small mb-2">Text Body:</p>
+                            <pre class="bg-white border rounded p-2 small custom-scrollbar" style="max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${escapeForSrcdoc(bodyText)}</pre>
                             ${htmlContent ? `
-                                <p class="font-semibold mt-2 text-slate-700 text-xs">HTML Body:</p>
-                                <iframe srcdoc="<html><head><base target='_blank'><style>body{font-family:sans-serif;padding:8px;overflow-wrap:break-word;}img{max-width:100%;height:auto;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ddd;padding:4px;text-align:left;}</style></head><body>${htmlContent}</body></html>" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin" class="mt-1 message-item-iframe"></iframe>
-                            ` : '<p class="text-xs text-slate-400 mt-1">(No HTML body)</p>'}
+                                <p class="fw-semibold text-dark small mt-3 mb-2">HTML Body:</p>
+                                <iframe srcdoc="<html><head><base target='_blank'><style>body{font-family:sans-serif;padding:8px;overflow-wrap:break-word;}img{max-width:100%;height:auto;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ddd;padding:4px;text-align:left;}</style></head><body>${htmlContent}</body></html>" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin" class="message-item-iframe"></iframe>
+                            ` : '<p class="small text-muted mt-2">(No HTML body)</p>'}
                         </div>
                     </details>
                 `;
-                if (append && container.firstChild && !container.querySelector('p.placeholder-message')) { 
+                if (append && container.firstChild && !container.querySelector('p.text-muted.text-center')) {
                     container.insertBefore(msgDiv, container.firstChild);
                 } else {
                     container.appendChild(msgDiv);
                 }
-                if (append) G_DISPLAYED_MESSAGE_IDS.add(msg.id); 
+                if (append) G_DISPLAYED_MESSAGE_IDS.add(msg.id);
             });
         }
 
@@ -535,7 +718,7 @@
                 params.provider = provider;
             }
             if ((provider && provider.toLowerCase() === 'tempmail.lol') || !provider || provider.toLowerCase() === 'random') {
-                 params.rush_mode = rushMode;
+                params.rush_mode = rushMode;
             }
 
             const result = await apiRequest('/gen', 'POST', null, params, e.target);
@@ -553,12 +736,12 @@
                 return;
             }
             const params = { provider_name: providerName };
-             if (providerName.toLowerCase() === 'tempmail.lol') params.rush_mode = rushMode; 
+            if (providerName.toLowerCase() === 'tempmail.lol') params.rush_mode = rushMode;
 
             const result = await apiRequest('/sessions', 'POST', null, params, e.target);
             document.getElementById('createSessionResponse').textContent = result.success ? JSON.stringify(result.data, null, 2) : (result.error?.detail || 'Error creating session.');
             if (result.success && result.data) {
-                 updateGlobalSessionInfo(result.data.api_session_id, result.data.email_address, result.data.provider);
+                updateGlobalSessionInfo(result.data.api_session_id, result.data.email_address, result.data.provider);
             }
         });
 
@@ -573,22 +756,22 @@
 
             const isNewSessionForFetch = G_FETCH_MESSAGES_SESSION_ID_TRACKER !== sessionIdToUse;
             if (isNewSessionForFetch) {
-                document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">Fetching messages...</p>'; 
-                G_DISPLAYED_MESSAGE_IDS.clear(); 
-                G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse; 
+                document.getElementById('messagesResponse').innerHTML = '<p class="text-muted text-center mb-0">Fetching messages...</p>';
+                G_DISPLAYED_MESSAGE_IDS.clear();
+                G_FETCH_MESSAGES_SESSION_ID_TRACKER = sessionIdToUse;
             }
 
             const result = await apiRequest(`/sessions/${sessionIdToUse}/messages`, 'GET', null, null, e.target);
             if (result.success) {
-                displayMessageInDocs('messagesResponse', result.data, !isNewSessionForFetch); 
+                displayMessageInDocs('messagesResponse', result.data, !isNewSessionForFetch);
             } else {
-                 const messagesResponseDiv = document.getElementById('messagesResponse');
-                 if(messagesResponseDiv.querySelectorAll('.message-item').length === 0) { 
-                    messagesResponseDiv.innerHTML = `<p class="text-red-600 p-2 placeholder-message text-center">Error fetching messages. ${result.error?.detail || ''}</p>`;
-                 }
+                const messagesResponseDiv = document.getElementById('messagesResponse');
+                if(messagesResponseDiv.querySelectorAll('.message-item').length === 0) {
+                    messagesResponseDiv.innerHTML = `<p class="text-danger text-center mb-0">Error fetching messages. ${result.error?.detail || ''}</p>`;
+                }
             }
         });
-        
+
         document.getElementById('deleteMessageBtn').addEventListener('click', async (e) => {
             const sessionIdInput = document.getElementById('deleteMessageSessionId').value;
             const messageId = document.getElementById('deleteMessageId').value;
@@ -612,16 +795,15 @@
                     if (msgElement) {
                         msgElement.remove();
                     }
-                    G_DISPLAYED_MESSAGE_IDS.delete(messageId); 
+                    G_DISPLAYED_MESSAGE_IDS.delete(messageId);
                     if (document.getElementById('messagesResponse').querySelectorAll('.message-item').length === 0) {
-                        document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">No messages found (or last one deleted).</p>';
+                        document.getElementById('messagesResponse').innerHTML = '<p class="text-muted text-center mb-0">No messages found (or last one deleted).</p>';
                     }
                 }
             } else {
                 responseOutput.textContent = `Failed to delete message ${messageId}. Status: ${result.status || 'N/A'}. ${result.error?.detail || ''}`;
             }
         });
-
 
         document.getElementById('deleteSessionDocsBtn').addEventListener('click', async (e) => {
             const sessionIdInput = document.getElementById('deleteSessionId').value;
@@ -633,29 +815,27 @@
             const result = await apiRequest(`/sessions/${sessionIdToUse}`, 'DELETE', null, null, e.target);
             const responseEl = document.getElementById('deleteSessionResponse');
             responseEl.textContent = result.success ? `Session ${sessionIdToUse.substring(0,15)}... deleted (Status: ${result.status})` : `Failed to delete (Status: ${result.status || 'N/A'}). ${result.error?.detail || ''}`;
-            if (result.success && sessionIdToUse === G_CURRENT_SESSION_ID) { 
-                updateGlobalSessionInfo(null, null, null); 
-                 document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">Current session deleted. Generate a new one to continue.</p>'; 
-                 G_DISPLAYED_MESSAGE_IDS.clear();
+            if (result.success && sessionIdToUse === G_CURRENT_SESSION_ID) {
+                updateGlobalSessionInfo(null, null, null);
+                document.getElementById('messagesResponse').innerHTML = '<p class="text-muted text-center mb-0">Current session deleted. Generate a new one to continue.</p>';
+                G_DISPLAYED_MESSAGE_IDS.clear();
             }
         });
 
         (async () => {
-            loadDocsSessionFromLocalStorage(); 
+            loadDocsSessionFromLocalStorage();
             const btn = document.getElementById('fetchProvidersBtn');
-            if (btn) { 
-                const result = await apiRequest('/providers', 'GET', null, null, btn); 
+            if (btn) {
+                const result = await apiRequest('/providers', 'GET', null, null, btn);
                 const providersResponseEl = document.getElementById('providersResponse');
-                if (providersResponseEl) { 
+                if (providersResponseEl) {
                     providersResponseEl.textContent = result.success ? JSON.stringify(result.data, null, 2) : (result.error?.detail || 'Error fetching providers on load.');
                 }
             }
             if (!G_CURRENT_SESSION_ID) {
-                document.getElementById('messagesResponse').innerHTML = '<p class="text-slate-500 p-2 placeholder-message text-center">Generate or create a session to see messages.</p>';
+                document.getElementById('messagesResponse').innerHTML = '<p class="text-muted text-center mb-0">Generate or create a session to see messages.</p>';
             }
-
         })();
-
     </script>
 </body>
 </html>
